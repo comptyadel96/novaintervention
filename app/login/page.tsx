@@ -15,10 +15,10 @@ export default function LoginPage() {
       <div className="auth-wrap" style={{ flex: 1 }}>
         <div className="auth-box">
           <div className="auth-box__header">
-            <p style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "#fff", marginBottom: "0.35rem" }}>
-              Nova <span style={{ color: "var(--orange)" }}>Intervention</span>
+            <p style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "var(--primary-dk)", marginBottom: "0.35rem" }}>
+              Nova <span style={{ color: "var(--primary)" }}>Intervention</span>
             </p>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", fontWeight: 800, color: "#fff", marginBottom: "0.5rem" }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", fontWeight: 800, color: "var(--primary-dk)", marginBottom: "0.5rem" }}>
               Connexion
             </h1>
             <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
@@ -34,7 +34,7 @@ export default function LoginPage() {
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
                   <label className="form-label" style={{ margin: 0 }}>Mot de passe</label>
-                  <Link href="#" style={{ fontSize: "0.78rem", color: "var(--orange)" }}>Mot de passe oublié ?</Link>
+                  <Link href="#" style={{ fontSize: "0.78rem", color: "var(--primary)" }}>Mot de passe oublié ?</Link>
                 </div>
                 <input type="password" className="form-input" placeholder="••••••••" />
               </div>
@@ -45,7 +45,7 @@ export default function LoginPage() {
             <div className="divider" />
             <p style={{ fontSize: "0.85rem", color: "var(--muted)", textAlign: "center" }}>
               Pas encore de compte ?{" "}
-              <Link href="/register" style={{ color: "var(--orange)", fontWeight: 600 }}>Créer un compte</Link>
+              <Link href="/register" style={{ color: "var(--primary)", fontWeight: 600 }}>Créer un compte</Link>
             </p>
           </div>
         </div>

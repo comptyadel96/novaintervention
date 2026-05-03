@@ -91,14 +91,14 @@ export function Header() {
               key={item.href}
               href={item.href}
               onClick={() => setMenuOpen(false)}
-              style={{ display: "block", padding: "0.75rem 0", color: "#fff", fontSize: "0.9rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ display: "block", padding: "0.75rem 0", color: "var(--primary-dk)", fontSize: "0.9rem", borderBottom: "1px solid var(--border)" }}
             >
               {item.label}
             </Link>
           ))}
 
-          <div style={{ padding: "0.5rem 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <p style={{ fontSize: "0.72rem", color: "var(--orange)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", marginTop: "0.25rem" }}>
+          <div style={{ padding: "0.5rem 0", borderBottom: "1px solid var(--border)" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", marginTop: "0.25rem" }}>
               Services
             </p>
             {services.map((s) => (

@@ -15,10 +15,10 @@ export default function RegisterPage() {
       <div className="auth-wrap" style={{ flex: 1 }}>
         <div className="auth-box">
           <div className="auth-box__header">
-            <p style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "#fff", marginBottom: "0.35rem" }}>
-              Nova <span style={{ color: "var(--orange)" }}>Intervention</span>
+            <p style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "var(--primary-dk)", marginBottom: "0.35rem" }}>
+              Nova <span style={{ color: "var(--primary)" }}>Intervention</span>
             </p>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", fontWeight: 800, color: "#fff", marginBottom: "0.5rem" }}>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", fontWeight: 800, color: "var(--primary-dk)", marginBottom: "0.5rem" }}>
               Créer un compte
             </h1>
             <p style={{ fontSize: "0.875rem", color: "var(--muted)" }}>
@@ -60,9 +60,9 @@ export default function RegisterPage() {
             <div className="divider" />
             <p style={{ fontSize: "0.85rem", color: "var(--muted)", textAlign: "center" }}>
               Déjà un compte ?{" "}
-              <Link href="/login" style={{ color: "var(--orange)", fontWeight: 600 }}>Se connecter</Link>
+              <Link href="/login" style={{ color: "var(--primary)", fontWeight: 600 }}>Se connecter</Link>
             </p>
-            <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.25)", textAlign: "center", marginTop: "0.75rem" }}>
+            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", textAlign: "center", marginTop: "0.75rem" }}>
               Vous êtes artisan ?{" "}
               <Link href="/devenir-partenaire" style={{ color: "var(--muted)" }}>Candidatez ici →</Link>
             </p>

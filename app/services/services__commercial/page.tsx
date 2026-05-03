@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
@@ -9,107 +10,104 @@ export const metadata: Metadata = {
 };
 
 const installations = [
-  { icon: "🚿", title: "Appareil sanitaire", desc: "Installation ou remplacement de lavabo, WC, douche, baignoire, bidet et robinetterie associée." },
-  { icon: "🔥", title: "Chauffe-eau & production d'eau chaude", desc: "Remplacement de chauffe-eau électrique, thermodynamique ou au gaz. Ballon solaire." },
-  { icon: "🪠", title: "Réseau de tuyauterie", desc: "Remplacement ou extension de canalisations en cuivre, PER, multicouche ou PVC." },
-  { icon: "🛁", title: "Remplacement de baignoire", desc: "Dépose de l'ancienne baignoire et installation d'une nouvelle, avec raccordement complet." },
-  { icon: "🔧", title: "Robinetterie & mitigeurs", desc: "Remplacement de robinets, mitigeurs thermostatiques, vannes d'arrêt et équipements sanitaires." },
+  { icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>, title: "Appareil sanitaire", desc: "Installation ou remplacement de lavabo, WC, douche, baignoire." },
+  { icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>, title: "Chauffe-eau", desc: "Remplacement de chauffe-eau, thermodynamique ou gaz." },
+  { icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10h16M4 14h16"/></svg>, title: "Réseau de tuyauterie", desc: "Extension de canalisations en cuivre, PER ou PVC." },
+  { icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="M12 18v4"></path></svg>, title: "Remplacement de baignoire", desc: "Pose avec raccordement complet et joints parfaits." },
+  { icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>, title: "Robinetterie", desc: "Remplacement de mitigeurs et vannes d'arrêt." },
+];
+
+const processList = [
+  { num: "01", title: "Décrivez votre projet", body: "Partagez vos besoins. Un devis précis est établi." },
+  { num: "02", title: "Planification et intervention", body: "Un artisan certifié intervient au créneau qui vous convient." },
+  { num: "03", title: "Réception et garantie", body: "Travaux vérifiés, avec assurance et garantie incluses." },
 ];
 
 export default function CommercialPage() {
   return (
-    <div className="page-wrap">
+    <div className="page-wrap bg-bg-body">
       <Header />
-      <main className="main-content">
-        <nav className="breadcrumb">
-          <Link href="/">Accueil</Link>
-          <span className="breadcrumb__sep">›</span>
-          <Link href="/services">Services</Link>
-          <span className="breadcrumb__sep">›</span>
-          <span className="breadcrumb__current">Installation & remplacement</span>
-        </nav>
+      
+      <div className="relative w-full min-h-[35vh] flex items-end pb-12 pt-28 mt-[-5.5rem] bg-bg-alt overflow-hidden border-b border-border">
+        <div className="absolute inset-0 z-0 bg-grid opacity-50"></div>
+        <div className="container relative z-10">
+          <nav className="flex items-center gap-2 text-sm text-text-muted font-bold tracking-widest uppercase mb-4">
+            <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
+            <span>/</span>
+            <Link href="/services" className="hover:text-primary transition-colors">Services</Link>
+            <span>/</span>
+            <span className="text-primary-dk">Installation</span>
+          </nav>
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-primary-dk mb-4" style={{ fontFamily: "var(--font-display)" }}>
+              Installations planifiées par des pros
+            </h1>
+            <p className="text-lg text-text-muted leading-relaxed">
+              Planifiez en toute confiance vos installations sanitaires. Nos techniciens apportent savoir-faire et qualité premium.
+            </p>
+          </div>
+        </div>
+      </div>
 
-        <div className="content-sidebar">
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-
-            <section className="card-xl">
-              <p className="label" style={{ marginBottom: "0.75rem" }}>🔧 Installation & remplacement</p>
-              <h1 className="page-title" style={{ marginBottom: "1rem" }}>Installations planifiées par des pros</h1>
-              <p style={{ color: "var(--muted)", lineHeight: 1.75, marginBottom: "1.5rem", fontSize: "0.95rem" }}>
-                Contactez-nous pour planifier installation & remplacement : appareil sanitaire, robinetterie, production d&apos;eau chaude, réseau de tuyauterie.
-              </p>
-              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-                <Link href="/demander" className="btn btn-primary">Réservez un plombier !</Link>
-                <Link href="tel:0788209773" className="btn btn-green">07 88 20 97 73</Link>
-              </div>
-            </section>
-
-            <section className="card-xl" style={{ background: "var(--navy-mid)" }}>
-              <h2 className="h2" style={{ marginBottom: "1.5rem" }}>Nos prestations d&apos;installation</h2>
-              <div className="problem-list">
-                {installations.map((p) => (
-                  <div key={p.title} className="problem-item">
-                    <span className="problem-icon">{p.icon}</span>
+      <main className="container py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-12">
+          
+          <div className="space-y-12">
+            <section className="card">
+              <h2 className="h2 mb-6">Nos Prestations</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {installations.map((p, i) => (
+                  <div key={i} className="flex gap-4 p-5 rounded-2xl bg-bg-alt border border-border transition-colors hover:border-primary-lt">
+                    <span className="text-primary mt-1">{p.icon}</span>
                     <div>
-                      <p className="problem-title">{p.title}</p>
-                      <p className="problem-desc">{p.desc}</p>
+                      <h3 className="font-bold text-primary-dk text-lg">{p.title}</h3>
+                      <p className="text-sm text-text-muted mt-1 leading-relaxed">{p.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </section>
 
-            <section className="card-xl" style={{ background: "var(--navy-mid)" }}>
-              <h2 className="h2" style={{ marginBottom: "1.5rem" }}>Comment planifier votre installation ?</h2>
-              <div className="process-list">
-                {[
-                  { num: "01", title: "Décrivez votre projet", body: "Partagez vos besoins et photos. Un devis précis est établi avant toute intervention." },
-                  { num: "02", title: "Planification et intervention", body: "Un artisan certifié intervient au créneau qui vous convient, équipé pour réaliser les travaux en une seule visite." },
-                  { num: "03", title: "Réception et garantie", body: "Travaux vérifiés, paiement sécurisé et carnet d'entretien mis à jour. Garantie incluse." },
-                ].map((s) => (
-                  <div key={s.num} className="process-item">
-                    <span className="process-num">{s.num}</span>
-                    <div className="process-body"><h3>{s.title}</h3><p>{s.body}</p></div>
-                  </div>
-                ))}
+            <section className="card flex flex-col md:flex-row gap-8 items-center bg-dots border-border">
+              <div className="flex-1">
+                <h2 className="h2 mb-4">Un processus fluide</h2>
+                <div className="space-y-6 mt-6">
+                  {processList.map((m, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="w-12 h-12 bg-white flex-shrink-0 rounded-full flex items-center justify-center text-primary font-bold shadow-lg border border-border">
+                        {m.num}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-primary-dk text-lg">{m.title}</h3>
+                        <p className="text-sm text-text-muted">{m.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex-1 w-full relative h-[300px] rounded-3xl overflow-hidden shadow-xl">
+                <Image src="/images/step__img01.png" alt="Installation" fill style={{ objectFit: "cover" }} />
               </div>
             </section>
-
           </div>
 
-          <aside className="sidebar">
-            <div className="sidebar__card">
-              <h3 className="h3" style={{ marginBottom: "0.5rem" }}>Réservez un plombier !</h3>
-              <p style={{ color: "var(--muted)", fontSize: "0.83rem", lineHeight: 1.6, marginBottom: "1.25rem" }}>Devis gratuit avant toute intervention planifiée.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <Link href="tel:0788209773" className="btn btn-green btn-full">07 88 20 97 73</Link>
-                <Link href="/demander" className="btn btn-primary btn-full">Demander en ligne</Link>
+          <aside className="space-y-8">
+            <div className="card-mid !bg-primary !border-transparent sticky top-28">
+              <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-display)" }}>Planifiez votre projet</h3>
+              <p className="text-white/80 text-sm mb-6 leading-relaxed">
+                Obtenez une date d'intervention et un devis complet très rapidement.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Link href="+33788209773" className="btn bg-white text-primary-dk hover:bg-bg-alt w-full">
+                  📞 07 88 20 97 73
+                </Link>
+                <Link href="/demander" className="btn border-2 border-white/30 !text-white hover:bg-white hover:!text-primary w-full">
+                  Demande de devis
+                </Link>
               </div>
-            </div>
-
-            <div className="sidebar__card--mid">
-              <h3 className="h3" style={{ marginBottom: "1rem" }}>6 raisons de nous faire confiance</h3>
-              <div className="why-list">
-                {["Techniciens certifiés et assurés", "Intervention rapide 24h/24 – 7j/7", "Prix transparents et encadrés", "Paiement sécurisé", "Aucun frais caché", "Intervention garantie"].map((w, i) => (
-                  <div key={w} className="why-item">
-                    <span className="why-num">{i + 1}</span>
-                    <span className="why-label">{w}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="sidebar__card--mid">
-              <h3 className="h3" style={{ marginBottom: "1rem" }}>Autres services</h3>
-              {[
-                { href: "/services/services__emergency", label: "Dépannage d'urgence" },
-                { href: "/services/services__residential", label: "Réparation & fuite d'eau" },
-                { href: "/services/services__debouchage_conduites", label: "Débouchage des conduites" },
-              ].map((s) => (
-                <Link key={s.href} href={s.href} className="site-footer__link" style={{ display: "block", padding: "0.5rem 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>→ {s.label}</Link>
-              ))}
             </div>
           </aside>
+
         </div>
       </main>
       <Footer />

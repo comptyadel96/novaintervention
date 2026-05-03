@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 
-const steps = ["Photo", "Analyse IA", "Coordonnées"];
+const steps = ["Photo IA", "Estimation", "Artisan"];
 
 export default function DemanderPage() {
   const [step, setStep] = useState(0);
@@ -16,143 +16,151 @@ export default function DemanderPage() {
   };
 
   return (
-    <div className="page-wrap" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="page-wrap bg-bg-body min-h-screen flex flex-col">
       <Header />
-      <main style={{ flex: 1, maxWidth: "40rem", margin: "0 auto", padding: "2.5rem 1.5rem 5rem", width: "100%" }}>
+      <main className="container max-w-3xl py-12 flex-1">
+
+        {/* Subheader */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-primary-dk mb-4" style={{ fontFamily: "var(--font-display)" }}>
+            Demande d'intervention
+          </h1>
+          <p className="text-text-muted">Réponse estimée &lt; 30 minutes. Zone d'intervention premium.</p>
+        </div>
 
         {/* Step indicators */}
-        <div className="steps">
+        <div className="flex justify-between items-center max-w-lg mx-auto mb-12 relative z-10">
+          <div className="absolute top-1/2 left-0 w-full h-[2px] bg-border -z-10 translate-y-[-10px]"></div>
           {steps.map((s, i) => (
-            <div key={s} className="step-item">
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                <div className={`step-circle step-circle--${i < step ? "done" : i === step ? "active" : "inactive"}`}>
-                  {i < step ? "✓" : i + 1}
-                </div>
-                <span className="step-label" style={{ color: i <= step ? "var(--orange)" : "var(--muted)", fontWeight: i === step ? 600 : 400 }}>
-                  {s}
-                </span>
+            <div key={s} className="flex flex-col items-center gap-2 bg-bg-body px-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors border-2
+                ${i < step ? "bg-primary border-primary text-white" : 
+                  i === step ? "bg-white border-primary-dk text-primary-dk" : 
+                  "bg-bg-alt border-border text-text-muted"}
+              `}>
+                {i < step ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                ) : i + 1}
               </div>
-              {i < steps.length - 1 && (
-                <div className={`step-line step-line--${i < step ? "done" : "inactive"}`} />
-              )}
+              <span className={`text-xs uppercase tracking-widest font-bold ${i <= step ? "text-primary-dk" : "text-text-muted"}`}>
+                {s}
+              </span>
             </div>
           ))}
         </div>
 
-        {/* STEP 0 — Photo */}
-        {step === 0 && (
-          <div className="card-xl">
-            <p className="label" style={{ marginBottom: "0.75rem" }}>Étape 1</p>
-            <h1 className="h2" style={{ marginBottom: "0.75rem" }}>
-              Décrivez votre problème en quelques secondes
-            </h1>
-            <p style={{ color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.65, marginBottom: "1.5rem" }}>
-              Prenez une photo et expliquez votre besoin. Vous recevrez une estimation claire avant intervention, sans surprise.
-            </p>
-            <label style={{
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              borderRadius: "1.25rem", border: "2px dashed rgba(255,107,43,0.35)",
-              background: "rgba(255,107,43,0.03)", padding: "2.5rem 1.5rem",
-              cursor: "pointer", marginBottom: "1.25rem",
-            }}>
-              <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
-              {preview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="Aperçu" style={{ maxHeight: "200px", borderRadius: "0.75rem", objectFit: "cover" }} />
-              ) : (
-                <>
-                  <span style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📷</span>
-                  <p style={{ color: "#fff", fontWeight: 600, marginBottom: "0.25rem" }}>Ajouter une photo</p>
-                  <p style={{ color: "var(--muted)", fontSize: "0.8rem" }}>Cliquez pour sélectionner une image</p>
-                </>
-              )}
-            </label>
-            <div style={{ marginBottom: "1.25rem" }}>
-              <label className="form-label">Description du problème</label>
-              <textarea className="form-textarea" placeholder="Ex: Ma baignoire fuit depuis ce matin, l'eau vient du joint…" style={{ minHeight: "5rem" }} />
+        {/* Content Wrapper */}
+        <div className="card-xl bg-white border border-border shadow-sm">
+          
+          {/* STEP 0 — Photo */}
+          {step === 0 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Étape 1 sur 3</span>
+              <h2 className="text-2xl font-bold text-primary-dk mb-4">Décrivez l'urgence</h2>
+              <p className="text-sm text-text-muted mb-6 leading-relaxed">
+                Nova utilise l'analyse photo IA pour comprendre instantanément votre problème et afficher votre devis définitif.
+              </p>
+              
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-primary/30 bg-bg-alt rounded-2xl p-10 cursor-pointer hover:bg-bg-body transition-colors mb-6">
+                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={preview} alt="Aperçu" className="max-h-48 rounded-xl object-cover shadow-sm mb-4" />
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-primary mb-4"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    <p className="text-primary-dk font-bold mb-1">Ajouter une photo</p>
+                    <p className="text-xs text-text-muted">Glissez-déposez ou cliquez ici</p>
+                  </>
+                )}
+              </label>
+
+              <div className="mb-8">
+                <label className="block text-sm font-semibold text-primary-dk mb-2">Description additionnelle (optionnelle)</label>
+                <textarea className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3 min-h-[100px]" placeholder="Précisez tout détail utile..." />
+              </div>
+
+              <button onClick={() => setStep(1)} className="btn btn-primary w-full justify-center text-lg py-4">
+                Lancer l'analyse IA
+              </button>
             </div>
-            <button onClick={() => setStep(1)} className="btn btn-primary btn-full">
-              Analyser avec l&apos;IA →
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* STEP 1 — AI result */}
-        {step === 1 && (
-          <div className="card-xl">
-            <p className="label" style={{ marginBottom: "0.75rem" }}>Étape 2</p>
-            <h2 className="h2" style={{ marginBottom: "1.25rem" }}>Résultat de l&apos;analyse IA</h2>
+          {/* STEP 1 — AI result */}
+          {step === 1 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Étape 2 sur 3</span>
+              <h2 className="text-2xl font-bold text-primary-dk mb-6">Bilan de l'Intelligence Artificielle</h2>
 
-            <div className="card-mid" style={{ marginBottom: "1.25rem" }}>
-              {[
-                { key: "Type d'intervention", val: "Plomberie", badge: true },
-                { key: "Niveau d'urgence", val: "Urgent", badge: true, urgent: true },
-                { key: "Estimation", val: "150€ – 250€ HT", badge: false },
-                { key: "Durée estimée", val: "45 min", badge: false },
-              ].map((row, i, arr) => (
-                <div key={row.key}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 0" }}>
-                    <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>{row.key}</span>
+              <div className="bg-bg-alt border border-border rounded-2xl p-6 mb-6">
+                {[
+                  { key: "Intervention", val: "Plomberie Expertise", badge: true },
+                  { key: "Urgence", val: "Nécessite réaction immédiate", badge: true, urgent: true },
+                  { key: "Estimation", val: "150€ – 250€ HT", badge: false, heavy: true },
+                  { key: "Temps requis", val: "45 minutes estimées", badge: false },
+                ].map((row, i, arr) => (
+                  <div key={row.key} className="flex flex-col sm:flex-row justify-between sm:items-center py-4 border-b border-border last:border-0 last:pb-0 first:pt-0">
+                    <span className="text-sm font-semibold text-text-muted mb-2 sm:mb-0">{row.key}</span>
                     {row.badge ? (
-                      <span className={`badge ${row.urgent ? "" : "badge-orange"}`} style={row.urgent ? { background: "rgba(239,68,68,0.15)", color: "#f87171" } : {}}>
+                      <span className={`px-3 py-1 text-xs font-bold rounded-full border ${row.urgent ? "bg-red-50 text-red-600 border-red-200" : "bg-bg-body text-primary-dk border-border"} self-start sm:self-auto`}>
                         {row.val}
                       </span>
                     ) : (
-                      <span style={{ color: "#fff", fontWeight: 700 }}>{row.val}</span>
+                      <span className={`text-sm ${row.heavy ? "font-extrabold text-primary text-xl" : "font-bold text-primary-dk"}`}>{row.val}</span>
                     )}
                   </div>
-                  {i < arr.length - 1 && <div className="divider" style={{ margin: 0 }} />}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            <div style={{ borderRadius: "1rem", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", padding: "1rem", marginBottom: "1.25rem" }}>
-              <p style={{ color: "var(--green)", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.25rem" }}>✓ Confiance haute (91%)</p>
-              <p style={{ color: "var(--muted)", fontSize: "0.82rem" }}>Fuite probable au niveau du siphon ou du joint d&apos;évacuation.</p>
-            </div>
-
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button onClick={() => setStep(0)} className="btn btn-outline" style={{ flex: 1 }}>← Retour</button>
-              <button onClick={() => setStep(2)} className="btn btn-primary" style={{ flex: 2 }}>Confirmer →</button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 2 — Coordonnées */}
-        {step === 2 && (
-          <div className="card-xl">
-            <p className="label" style={{ marginBottom: "0.75rem" }}>Étape 3</p>
-            <h2 className="h2" style={{ marginBottom: "0.5rem" }}>Vos coordonnées</h2>
-            <p style={{ color: "var(--muted)", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
-              Un artisan certifié vous sera envoyé rapidement.
-            </p>
-            <form style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div className="grid-2">
+              <div className="bg-green-50 border border-green-200 p-4 rounded-xl mb-8 flex gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 flex-shrink-0 mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 <div>
-                  <label className="form-label">Prénom</label>
-                  <input type="text" className="form-input" placeholder="Jean" />
+                  <p className="text-green-800 font-bold text-sm mb-1">Confiance de détection : 91%</p>
+                  <p className="text-green-700 text-xs">Diagnostic IA : Fuite probable au niveau du siphon. Prêt pour mandater.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button onClick={() => setStep(0)} className="btn bg-bg-alt border border-border text-text-muted hover:border-primary-lt w-1/3 justify-center">Retour</button>
+                <button onClick={() => setStep(2)} className="btn btn-primary flex-1 justify-center">Accepter le devis prévisionnel</button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2 — Coordonnées */}
+          {step === 2 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">C'est presque terminé</span>
+              <h2 className="text-2xl font-bold text-primary-dk mb-2">Où doit-on intervenir ?</h2>
+              <p className="text-sm text-text-muted mb-8">Un expert Nova certifié sera chez vous dans les minutes qui suivent.</p>
+              
+              <form className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-primary-dk mb-1.5">Nom complet</label>
+                    <input type="text" className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3" placeholder="Jean Dupont" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-primary-dk mb-1.5">Téléphone d'urgence</label>
+                    <input type="tel" className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3" placeholder="06 00 00 00 00" />
+                  </div>
                 </div>
                 <div>
-                  <label className="form-label">Téléphone</label>
-                  <input type="tel" className="form-input" placeholder="06 00 00 00 00" />
+                  <label className="block text-sm font-semibold text-primary-dk mb-1.5">Adresse exacte</label>
+                  <input type="text" className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3" placeholder="Numéro, rue, bâtiment, code postal..." />
                 </div>
-              </div>
-              <div>
-                <label className="form-label">Adresse complète</label>
-                <input type="text" className="form-input" placeholder="12 rue de la Paix, 75001 Paris" />
-              </div>
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.25rem" }}>
-                <button type="button" onClick={() => setStep(1)} className="btn btn-outline" style={{ flex: 1 }}>← Retour</button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>Envoyer la demande ✓</button>
-              </div>
-            </form>
-          </div>
-        )}
+                
+                <div className="flex gap-4 mt-4">
+                  <button type="button" onClick={() => setStep(1)} className="btn bg-bg-alt border border-border text-text-muted hover:border-primary-lt w-1/3 justify-center">Retour</button>
+                  <button type="submit" className="btn btn-primary flex-1 justify-center bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg shadow-green-600/20">
+                    Mandater l'Artisan !
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
-        <p style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.8rem", color: "var(--muted)" }}>
-          Besoin d&apos;aide immédiate ?{" "}
-          <Link href="tel:+33788209773" style={{ color: "var(--green)", fontWeight: 600 }}>07 88 20 97 73</Link>
-        </p>
+        </div>
       </main>
       <Footer />
     </div>

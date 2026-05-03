@@ -33,7 +33,7 @@ export function Footer() {
             <div className="site-footer__links">
               <Link href="tel:+33788209773"                 className="site-footer__link">07 88 20 97 73</Link>
               <Link href="mailto:contact@novaintervention.com" className="site-footer__link">contact@novaintervention.com</Link>
-              <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.3)", marginTop: "0.75rem" }}>Service 24h/7j · Intervention rapide</p>
+              <p style={{ fontSize: "0.8rem", color: "rgba(255, 255, 255, 0.4)", marginTop: "0.75rem" }}>Service 24h/7j · Intervention rapide</p>
             </div>
           </div>
         </div>
