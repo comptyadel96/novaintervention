@@ -1,12 +1,8 @@
-import type { Metadata } from "next";
+"use client";
+import { useState } from "react";
 import Link from "next/link";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-
-export const metadata: Metadata = {
-  title: "Contactez-nous – Nova Intervention",
-  description: "Besoin d'une intervention urgente ou d'un renseignement ? Contactez Nova Intervention.",
-};
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 const contacts = [
   { icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>, label: "Téléphone", value: "07 88 20 97 73", href: "tel:+33788209773", kind: "bg-primary text-white" },
@@ -15,6 +11,18 @@ const contacts = [
 ];
 
 export default function ContactPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    alert("Votre message a bien été envoyé ! Nous vous répondrons sous peu.");
+  };
   return (
     <div className="page-wrap bg-bg-body">
       <Header />
@@ -60,31 +68,31 @@ export default function ContactPage() {
             <p className="text-sm text-text-muted mb-8">
               Décrivez votre situation et nous vous répondrons rapidement.
             </p>
-            <form className="flex flex-col gap-6">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-primary-dk mb-2">Prénom</label>
-                  <input type="text" className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="Jean" />
+                  <input type="text" required className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="Jean" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-primary-dk mb-2">Nom</label>
-                  <input type="text" className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="Dupont" />
+                  <input type="text" required className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="Dupont" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-primary-dk mb-2">Email</label>
-                <input type="email" className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="jean.dupont@email.com" />
+                <input type="email" required className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="jean.dupont@email.com" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-primary-dk mb-2">Téléphone</label>
-                <input type="tel" className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="06 00 00 00 00" />
+                <input type="tel" required className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3" placeholder="06 00 00 00 00" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-primary-dk mb-2">Message</label>
-                <textarea className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3 min-h-[120px]" placeholder="Décrivez votre problème ou votre question…" />
+                <textarea required className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary focus:border-primary w-full px-4 py-3 min-h-[120px]" placeholder="Décrivez votre problème ou votre question…" />
               </div>
-              <button type="submit" className="btn btn-primary w-full justify-center">
-                Envoyer le message
+              <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full justify-center disabled:opacity-50">
+                {isSubmitting ? "Envoi en cours..." : "Envoyer le message"}
               </button>
             </form>
           </div>

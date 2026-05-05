@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
-import { ServiceCard } from "@/components/ServiceCard";
+import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/components/layout/Header";
+import { ServiceCard } from "@/components/shared/ServiceCard";
 import { defaultFeatures, serviceList } from "@/lib/services";
 
 const services = Object.keys(serviceList) as Array<keyof typeof serviceList>;

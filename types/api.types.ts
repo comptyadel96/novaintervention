@@ -2,7 +2,13 @@ export type InterventionType =
   | "services__emergency"
   | "services__residential"
   | "services__commercial"
-  | "services__debouchage_conduites";
+  | "services__debouchage_conduites"
+  | "plomberie"
+  | "electricite"
+  | "chauffage"
+  | "clim"
+  | "serrurerie"
+  | "vitrerie";
 
 export type UrgencyLevel = "urgent" | "standard" | "planifiable";
 
@@ -15,4 +21,8 @@ export interface AnalyzePhotoResult {
   pieces_recommandees: string[];
   duree_estimee_minutes: number;
   confidence: number;
+}
+
+export interface AnalyzePhotoRequest {
+  image: string; // base64 string
 }

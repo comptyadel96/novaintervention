@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { InterventionType } from "@/lib/types";
+import type { InterventionType } from "@/types";
 import { serviceList } from "@/lib/services";
 
 interface ServiceCardProps {
@@ -9,6 +9,7 @@ interface ServiceCardProps {
 
 export function ServiceCard({ service }: ServiceCardProps) {
   const item = serviceList[service];
+  if (!item) return null;
   return (
     <Link href={`/services/${service}`} className="service-card" style={{ padding: 0, overflow: "hidden" }}>
       <div style={{ position: "relative", width: "100%", height: "220px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>

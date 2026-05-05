@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
 const services = [
   { href: "/services/services__emergency",             label: "Dépannage d'urgence" },
@@ -12,6 +14,31 @@ const services = [
 export function Header() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      router.refresh();
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase, router]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push("/");
+  };
 
   return (
     <header className="site-header">
@@ -52,12 +79,26 @@ export function Header() {
 
         {/* Desktop CTAs */}
         <div className="site-header__ctas hide-mobile">
-          <Link
-            href="/login"
-            className="btn btn-outline btn-sm"
-          >
-            Connexion
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-bold text-primary-dk">
+                Hello, {user.user_metadata?.first_name || 'Artisan'}
+              </span>
+              <button 
+                onClick={handleSignOut}
+                className="btn btn-outline btn-sm"
+              >
+                Déconnexion
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="btn btn-outline btn-sm"
+            >
+              Connexion
+            </Link>
+          )}
           <Link
             href="/demander"
             className="btn btn-primary btn-sm"
@@ -113,10 +154,21 @@ export function Header() {
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.25rem", flexWrap: "wrap" }}>
-            <Link href="/login" onClick={() => setMenuOpen(false)} className="btn btn-outline btn-sm">
-              Connexion
-            </Link>
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.25rem", flexWrap: "wrap", alignItems: "center" }}>
+            {user ? (
+              <>
+                <span className="text-sm font-bold text-primary-dk w-full">
+                  Hello, {user.user_metadata?.first_name || 'Artisan'}
+                </span>
+                <button onClick={handleSignOut} className="btn btn-outline btn-sm">
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <Link href="/login" onClick={() => setMenuOpen(false)} className="btn btn-outline btn-sm">
+                Connexion
+              </Link>
+            )}
             <Link href="/demander" onClick={() => setMenuOpen(false)} className="btn btn-primary btn-sm">
               Demander une intervention
             </Link>

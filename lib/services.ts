@@ -1,9 +1,9 @@
-import type { InterventionType } from "@/lib/types";
+import type { InterventionType } from "@/types";
 
-export const serviceList: Record<
+export const serviceList: Partial<Record<
   InterventionType,
   { title: string; description: string; image: string }
-> = {
+>> = {
   services__emergency: {
     title: "Dépannage d'urgence",
     description:
