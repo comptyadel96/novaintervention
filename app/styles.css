@@ -1,5 +1,5 @@
 /* Consolidated styles from original site */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap");
 
 :root {
   --base-color: #0c4c93;
@@ -10,11 +10,11 @@
   --body-bg: #ffffff;
   --base-border: #e5e7eb;
   --base-text-color: #555555;
-  --base-font: 'DM Sans', system-ui, sans-serif;
-  --base-font2: 'Syne', system-ui, sans-serif;
+  --base-font: "DM Sans", system-ui, sans-serif;
+  --base-font2: "Syne", system-ui, sans-serif;
   --base-color2-rgba: 30, 96, 170;
   --base-color-dark-rgba: 11, 58, 107;
-  --font-icons: 'icomoon' !important;
+  --font-icons: "icomoon" !important;
   --form-text-color: #444;
 }
 
@@ -35,7 +35,12 @@ body {
   line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--base-font2);
   color: var(--base-color);
   font-weight: 800;
@@ -149,7 +154,9 @@ a:hover {
   border-radius: 4px;
   padding: 24px;
   box-shadow: 0 10px 30px rgba(26, 54, 85, 0.15);
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .card:hover {

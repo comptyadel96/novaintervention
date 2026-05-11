@@ -5,10 +5,16 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { analyzePhoto } from "@/services/api/vision";
 import type { AnalyzePhotoResult } from "@/types";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+
 
 const steps = ["Photo IA", "Estimation", "Coordonnées"];
 
 export default function DemanderPage() {
+  const router = useRouter();
+  const supabase = createClient();
+  
   const [step, setStep] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
   
@@ -19,6 +25,8 @@ export default function DemanderPage() {
   
   // Form State
   const [formData, setFormData] = useState({ fullName: "", phone: "", address: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -46,13 +54,37 @@ export default function DemanderPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("== PAYLOAD TO SUPABASE ==");
-    console.log("Intervention details:", iaResult);
-    if (extraDesc) console.log("Extra info:", extraDesc);
-    console.log("Client details:", formData);
-    alert("Votre demande a été envoyée avec succès ! Un artisan vous contactera d'ici quelques minutes.");
+    if (!iaResult) return;
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("missions")
+        .insert([
+          {
+            title: iaResult.type_intervention.replace('services__', '').replace(/_/g, ' '),
+            status: "pending",
+            customer_name: formData.fullName,
+            customer_phone: formData.phone,
+            location: formData.address,
+            description: extraDesc || iaResult.description_probleme,
+            price: iaResult.estimation_prix_max, // Using max estimation as default price for now
+            created_at: new Date().toISOString(),
+          },
+        ]);
+
+      if (error) throw error;
+
+      alert("Votre demande a été envoyée avec succès ! Un artisan vous contactera d'ici quelques minutes.");
+      router.push("/");
+    } catch (err) {
+      console.error("Error creating mission:", err);
+      alert("Une erreur est survenue lors de l'envoi de votre demande. Veuillez réessayer.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -220,11 +252,12 @@ export default function DemanderPage() {
                 </div>
                 
                 <div className="flex gap-4 mt-4">
-                  <button type="button" onClick={() => setStep(1)} className="btn bg-bg-alt border border-border text-text-muted hover:border-primary-lt w-1/3 justify-center">Retour</button>
-                  <button type="submit" className="btn btn-primary flex-1 justify-center bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg shadow-green-600/20">
-                    Mandater l'Artisan !
+                  <button type="button" onClick={() => setStep(1)} className="btn bg-bg-alt border border-border text-text-muted hover:border-primary-lt w-1/3 justify-center" disabled={isSubmitting}>Retour</button>
+                  <button type="submit" disabled={isSubmitting} className="btn btn-primary flex-1 justify-center bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg shadow-green-600/20 disabled:opacity-50">
+                    {isSubmitting ? "Envoi en cours..." : "Mandater l'Artisan !"}
                   </button>
                 </div>
+
               </form>
             </div>
           )}
