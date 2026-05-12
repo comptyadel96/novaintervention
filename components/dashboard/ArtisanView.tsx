@@ -1,9 +1,16 @@
 "use client";
 
-import { BarChart3, CalendarDays, CheckCircle2, Clock, MapPin, PieChart, ShieldCheck, TrendingUp, Users, Wallet, Check, X, BellDot } from "lucide-react";
+import { BarChart3, CalendarDays, CheckCircle2, Clock, MapPin, PieChart, ShieldCheck, TrendingUp, Users, Wallet, Check, X, BellDot, Mail, ShieldAlert } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import DownloadInvoiceButton from "./DownloadInvoiceButton";
+import dynamic from 'next/dynamic';
+
+const ArtisanMap = dynamic(() => import('./ArtisanMap'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full min-h-[400px] rounded-[2.5rem] bg-bg-alt border border-border animate-pulse flex items-center justify-center"><p className="text-sm font-bold text-text-muted">Chargement du Radar Live...</p></div>
+});
 
 
 const graphPanels = [
@@ -35,6 +42,7 @@ const graphPanels = [
 
 interface ArtisanViewProps {
   user: any;
+  profile: any;
   stats: {
     totalRevenue: number;
     monthlyRevenue: number;
@@ -42,13 +50,32 @@ interface ArtisanViewProps {
     activeClients: number;
     recentMissions: any[];
     availableMissions?: any[];
+    confirmedMissions?: any[];
   } | null;
 }
 
-export function ArtisanView({ user, stats }: ArtisanViewProps) {
+export function ArtisanView({ user, profile, stats }: ArtisanViewProps) {
   const router = useRouter();
   const supabase = createClient();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+
+  if (profile?.is_verified === false) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-6 animate-in zoom-in-95 duration-500">
+        <div className="w-24 h-24 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center shadow-lg">
+          <ShieldAlert size={48} />
+        </div>
+        <h1 className="text-4xl font-black text-primary-dk tracking-tight" style={{ fontFamily: "var(--font-display)" }}>En cours de vérification</h1>
+        <p className="text-text-muted max-w-md text-base leading-relaxed">
+          Notre équipe examine actuellement votre profil d'artisan pour garantir la qualité de la plateforme Nova. 
+          Vous pourrez accéder aux interventions et commencer à générer des revenus dès votre validation.
+        </p>
+        <button onClick={() => alert("Le support sera bientôt disponible.")} className="px-6 py-3 bg-bg-alt text-primary font-bold rounded-xl mt-4 hover:bg-border transition-colors uppercase tracking-widest text-[10px]">
+          Contacter le support
+        </button>
+      </div>
+    );
+  }
 
   const displayStats = stats || {
     totalRevenue: 0,
@@ -56,7 +83,8 @@ export function ArtisanView({ user, stats }: ArtisanViewProps) {
     weeklyMissionsCount: 0,
     activeClients: 0,
     recentMissions: [],
-    availableMissions: []
+    availableMissions: [],
+    confirmedMissions: []
   };
 
   const handleAccept = async (missionId: string) => {
@@ -82,51 +110,224 @@ export function ArtisanView({ user, stats }: ArtisanViewProps) {
   };
 
 
+  const handleArrive = async (missionId: string) => {
+    setIsProcessing(missionId);
+    try {
+      const { error } = await supabase
+        .from("missions")
+        .update({ 
+          status: "in_progress",
+          arrived_at: new Date().toISOString()
+        })
+        .eq("id", missionId);
+
+      if (error) throw error;
+      router.refresh();
+    } catch (err) {
+      console.error("Error marking arrival:", err);
+      alert("Erreur lors de la validation de l'arrivée.");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handlePhotoUpload = async (missionId: string, type: 'before' | 'after', file: File) => {
+    setIsProcessing(`${missionId}-${type}`);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${missionId}_${type}_${Date.now()}.${fileExt}`;
+      const filePath = `interventions/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('interventions')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('interventions')
+        .getPublicUrl(filePath);
+
+      const updateData = type === 'before' ? { photo_before: publicUrl } : { photo_after: publicUrl };
+      const { error: updateError } = await supabase
+        .from("missions")
+        .update(updateData)
+        .eq("id", missionId);
+
+      if (updateError) throw updateError;
+      router.refresh();
+    } catch (err) {
+      console.error("Error uploading photo:", err);
+      alert("Erreur lors de l'envoi de la photo.");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handleComplete = async (missionId: string) => {
+    setIsProcessing(missionId);
+    try {
+      const { error } = await supabase
+        .from("missions")
+        .update({ status: "waiting_confirmation" })
+        .eq("id", missionId);
+
+      if (error) throw error;
+      router.refresh();
+    } catch (err) {
+      console.error("Error completing mission:", err);
+      alert("Erreur lors de la clôture de la mission.");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const firstName = profile?.first_name || user.user_metadata?.first_name || "Artisan";
+  const lastName = profile?.last_name || user.user_metadata?.last_name || "Nova";
+  const displayName = `${firstName} ${lastName}`;
+  const displayPhone = profile?.phone || user.user_metadata?.phone || "Non spécifié";
+  const displayCity = profile?.city || user.user_metadata?.city || "France";
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="flex flex-col gap-6 lg:flex-row lg:justify-between lg:items-end">
         <div>
           <p className="text-primary font-bold uppercase tracking-widest text-xs mb-2">Tableau de bord Artisan</p>
           <h1 className="text-4xl font-extrabold text-primary-dk tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-            Bonjour, {user.user_metadata?.first_name || "Artisan"}
+            Bonjour, {firstName}
           </h1>
           <p className="mt-3 text-sm text-text-muted max-w-2xl">
-            Votre tableau de bord vous permet de suivre vos interventions, vos clients et vos revenus en un coup d'œil.
+            Gérez vos interventions en temps réel et suivez vos performances financières.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-1">
-          <div className="rounded-3xl bg-white border border-border p-4 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center gap-3 text-green-600">
-              <Wallet size={20} />
-              <span className="text-xs uppercase tracking-[0.25em] font-bold text-text-muted">Portefeuille</span>
-            </div>
-            <p className="text-3xl font-extrabold text-primary-dk">{displayStats.weeklyMissionsCount}</p>
-            <p className="text-sm text-text-muted">Nouvelles demandes cette semaine</p>
+        {/* Profile Card Header */}
+        <div className="flex flex-wrap items-center gap-6 p-6 bg-white border border-border rounded-3xl shadow-sm">
+          <div className="flex items-center gap-3">
+             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <Users size={24} />
+             </div>
+             <div>
+               <p className="text-sm font-bold text-primary-dk">{displayName}</p>
+               <p className="text-xs text-text-muted truncate max-w-[150px]">{user.email}</p>
+             </div>
           </div>
-          <div className="rounded-3xl bg-white border border-border p-4 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center gap-3 text-primary">
-              <Users size={20} />
-              <span className="text-xs uppercase tracking-[0.25em] font-bold text-text-muted">Clients</span>
-            </div>
-            <p className="text-3xl font-extrabold text-primary-dk">{displayStats.activeClients}</p>
-            <p className="text-sm text-text-muted">Clients actifs au total</p>
+          <div className="h-10 w-px bg-border hidden sm:block"></div>
+          <div className="flex flex-col gap-1">
+             <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">Localisation</span>
+             <div className="flex items-center gap-1.5">
+                <MapPin size={12} className="text-primary" />
+                <span className="text-xs font-bold text-primary-dk">{displayCity}</span>
+             </div>
           </div>
-          <div className="rounded-3xl bg-white border border-border p-4 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center gap-3 text-orange-500">
-              <PieChart size={20} />
-              <span className="text-xs uppercase tracking-[0.25em] font-bold text-text-muted">Retenue</span>
-            </div>
-            <p className="text-3xl font-extrabold text-primary-dk">72%</p>
-            <p className="text-sm text-text-muted">Clients fidèles sur 6 mois</p>
+          <div className="flex flex-col gap-1">
+             <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">Téléphone</span>
+             <span className="text-xs font-bold text-primary-dk">{displayPhone}</span>
           </div>
         </div>
       </header>
       
+      {/* SECTION MISSIONS EN COURS */}
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
+            <Clock size={24} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-extrabold text-primary-dk">Missions actives</h2>
+            <p className="text-sm text-text-muted mt-1">Interventions en cours de réalisation.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayStats.confirmedMissions && displayStats.confirmedMissions.length > 0 ? (
+            displayStats.confirmedMissions.map((mission) => (
+              <div key={mission.id} className="card p-6 bg-white border border-blue-100 rounded-[2rem] shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest
+                      ${mission.status === 'confirmed' ? "bg-blue-50 text-blue-700" : 
+                        mission.status === 'in_progress' ? "bg-green-50 text-green-700" : 
+                        "bg-orange-50 text-orange-700"}
+                    `}>
+                      {mission.status === 'confirmed' ? 'Acceptée' : 
+                       mission.status === 'in_progress' ? 'En cours' : 'Attente Client'}
+                    </span>
+                    <span className="font-bold text-primary-dk">{mission.price}€</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-primary-dk mb-1">{mission.customer_name}</h3>
+                  <div className="flex items-center gap-2 text-xs text-text-muted mb-4">
+                    <MapPin size={12} className="text-primary" />
+                    {mission.location}
+                  </div>
+
+                  {mission.photo_url && (
+                    <div className="mb-4">
+                      <p className="text-[10px] font-black text-text-muted uppercase mb-2">Photo du client</p>
+                      <img src={mission.photo_url} alt="Leak" className="w-full h-24 object-cover rounded-xl border border-border" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2 mt-4">
+                  {mission.status === 'confirmed' && (
+                    <button 
+                      onClick={() => handleArrive(mission.id)}
+                      disabled={isProcessing === mission.id}
+                      className="w-full py-3 bg-primary text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                    >
+                      {isProcessing === mission.id ? <span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"/> : "Je suis arrivé"}
+                    </button>
+                  )}
+
+                  {mission.status === 'in_progress' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className={`flex flex-col items-center justify-center py-3 px-1 rounded-xl border border-dashed transition-all cursor-pointer text-[10px] font-bold uppercase
+                        ${mission.photo_before ? 'bg-green-50 border-green-200 text-green-700' : 'bg-bg-alt border-border text-text-muted hover:border-primary'}
+                      `}>
+                         <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handlePhotoUpload(mission.id, 'before', e.target.files[0])} />
+                         {mission.photo_before ? 'Photo Avant ✅' : 'Photo Avant'}
+                      </label>
+                      <label className={`flex flex-col items-center justify-center py-3 px-1 rounded-xl border border-dashed transition-all cursor-pointer text-[10px] font-bold uppercase
+                        ${mission.photo_after ? 'bg-green-50 border-green-200 text-green-700' : 'bg-bg-alt border-border text-text-muted hover:border-primary'}
+                      `}>
+                         <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handlePhotoUpload(mission.id, 'after', e.target.files[0])} />
+                         {mission.photo_after ? 'Photo Après ✅' : 'Photo Après'}
+                      </label>
+                      <button 
+                        disabled={!mission.photo_before || !mission.photo_after || isProcessing === mission.id}
+                        onClick={() => handleComplete(mission.id)}
+                        className="col-span-2 py-3 bg-green-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider disabled:opacity-50"
+                      >
+                         Terminer la mission
+                      </button>
+                    </div>
+                  )}
+
+                  {mission.status === 'waiting_confirmation' && (
+                    <div className="py-3 bg-orange-50 text-orange-700 rounded-xl text-xs font-bold uppercase text-center border border-orange-100">
+                      En attente du client
+                    </div>
+                  )}
+                  
+                  <button className="w-full py-3 bg-bg-alt rounded-xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:bg-primary/5 hover:text-primary transition-colors flex items-center justify-center gap-2">
+                    <Mail size={12} /> Messagerie Nova
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full py-8 px-6 rounded-3xl bg-bg-alt border border-dashed border-border text-center">
+              <p className="text-sm text-text-muted italic">Aucune mission en cours pour le moment.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* SECTION MISSIONS DISPONIBLES (Style Uber) */}
       <section className="animate-in fade-in slide-in-from-top-4 duration-700">
         <div className="flex items-center gap-3 mb-6">
-          <div className="bg-primary/10 p-2 rounded-xl text-primary">
+          <div className="bg-orange-50 p-2 rounded-xl text-orange-600">
             <BellDot size={24} />
           </div>
           <div>
@@ -182,9 +383,14 @@ export function ArtisanView({ user, stats }: ArtisanViewProps) {
         </div>
       </section>
 
+      {/* SECTION CARTE INTERACTIVE */}
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <ArtisanMap missions={[...(displayStats.availableMissions || []), ...(displayStats.confirmedMissions || [])]} />
+      </section>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.9fr] gap-8">
         <section className="card p-8 bg-white border border-border rounded-[2.5rem] shadow-sm">
+
           <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
             <div>
               <h2 className="text-xl font-extrabold text-primary-dk">Portefeuille et performance</h2>
@@ -209,22 +415,32 @@ export function ArtisanView({ user, stats }: ArtisanViewProps) {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
+            {/* Planning Express - Feature 4 */}
             <div className="rounded-4xl bg-white border border-border p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-bold text-primary-dk">Clients de la semaine</p>
-                <span className="text-xs uppercase tracking-[0.25em] text-text-muted">7 jours</span>
+                <div className="flex items-center gap-2">
+                  <CalendarDays size={18} className="text-primary" />
+                  <p className="text-sm font-bold text-primary-dk">Planning Express</p>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">Aujourd'hui</span>
               </div>
-              <div className="grid grid-cols-4 gap-3">
-                {['Lun','Mar','Mer','Jeu'].map((day, index) => (
-                  <div key={day} className="space-y-2 text-center">
-                    <div className="h-24 rounded-3xl bg-primary/10 flex items-end justify-center overflow-hidden">
-                      <div className={`w-full bg-primary rounded-t-3xl`} style={{ height: `${40 + index * 12}%` }} />
+              <div className="space-y-3">
+                {displayStats.confirmedMissions && displayStats.confirmedMissions.length > 0 ? (
+                  displayStats.confirmedMissions.slice(0, 2).map((m, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-bg-alt rounded-2xl border border-border/50">
+                      <div className="w-2 h-10 bg-primary rounded-full" />
+                      <div>
+                        <p className="text-xs font-bold text-primary-dk">{m.title}</p>
+                        <p className="text-[10px] text-text-muted">{m.location}</p>
+                      </div>
                     </div>
-                    <p className="text-xs text-text-muted">{day}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-[10px] text-text-muted italic px-2">Aucun rendez-vous planifié aujourd'hui.</p>
+                )}
               </div>
             </div>
+
             <div className="rounded-4xl bg-white border border-border p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-bold text-primary-dk">Opportunités clients</p>
@@ -319,8 +535,8 @@ export function ArtisanView({ user, stats }: ArtisanViewProps) {
                 ))}
               </div>
               <div className="mt-4 flex justify-between text-[11px] uppercase tracking-[0.25em] text-text-muted">
-                {panel.labels.map((label) => (
-                  <span key={label}>{label}</span>
+                {panel.labels.map((label, i) => (
+                  <span key={`${label}-${i}`}>{label}</span>
                 ))}
               </div>
             </div>

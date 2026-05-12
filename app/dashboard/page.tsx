@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { ArtisanView } from "@/components/dashboard/ArtisanView";
 import { ClientView } from "@/components/dashboard/ClientView";
+import { AdminView } from "@/components/dashboard/AdminView";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
@@ -11,7 +12,35 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const role = user.user_metadata?.role || "client";
+  // Fetch detailed profile from our new profiles table
+  let { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  // If profile doesn't exist (e.g. user existed before the trigger), create it now
+  if (!profile && profileError) {
+    console.log("DEBUG: Profile missing for user, provisioning now...", user.id);
+    const { data: newProfile, error: insertError } = await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        email: user.email,
+        first_name: user.user_metadata?.first_name,
+        last_name: user.user_metadata?.last_name,
+        phone: user.user_metadata?.phone,
+        role: user.user_metadata?.role || "client"
+      })
+      .select()
+      .single();
+    
+    if (!insertError) {
+      profile = newProfile;
+    }
+  }
+
+  const role = profile?.role || user.user_metadata?.role || "client";
 
   let stats = null;
   if (role === "artisan") {
@@ -29,6 +58,7 @@ export default async function DashboardPage() {
 
     if (missions) {
       const completedMissions = missions.filter(m => m.status === "completed");
+      const confirmedMissions = missions.filter(m => m.status === "confirmed");
       const totalRevenue = completedMissions.reduce((acc, m) => acc + (Number(m.price) || 0), 0);
       
       const now = new Date();
@@ -49,7 +79,8 @@ export default async function DashboardPage() {
         activeClients: uniqueClients,
         recentMissions: missions
           .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-          .slice(0, 3)
+          .slice(0, 3),
+        confirmedMissions: confirmedMissions || []
       };
     }
     
@@ -63,6 +94,7 @@ export default async function DashboardPage() {
         weeklyMissionsCount: 0, 
         activeClients: 0, 
         recentMissions: [],
+        confirmedMissions: [],
         availableMissions: availableMissions || []
       } as any;
     }
@@ -70,10 +102,12 @@ export default async function DashboardPage() {
 
   return (
     <>
-      {role === "artisan" ? (
-        <ArtisanView user={user} stats={stats} />
+      {role === "admin" ? (
+        <AdminView user={user} profile={profile} />
+      ) : role === "artisan" ? (
+        <ArtisanView user={user} profile={profile} stats={stats} />
       ) : (
-        <ClientView user={user} />
+        <ClientView user={user} profile={profile} />
       )}
     </>
   );

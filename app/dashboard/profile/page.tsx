@@ -10,6 +10,13 @@ export default async function DashboardProfilePage() {
     redirect("/login");
   }
 
+  // Fetch detailed profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header>
@@ -20,7 +27,7 @@ export default async function DashboardProfilePage() {
       </header>
 
       <section className="card p-8 bg-white border border-border rounded-4xl shadow-sm">
-        <ProfileForm user={user} />
+        <ProfileForm user={user} profile={profile} />
       </section>
     </div>
   );

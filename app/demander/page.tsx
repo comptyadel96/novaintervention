@@ -25,18 +25,43 @@ export default function DemanderPage() {
   
   // Form State
   const [formData, setFormData] = useState({ fullName: "", phone: "", address: "" });
+  const [coords, setCoords] = useState<{lat: number, lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
+
+  const [file, setFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) {
+      setFile(f);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
       };
       reader.readAsDataURL(f);
     }
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setIsLocating(false);
+        // Optionnel: On pourrait utiliser un service de reverse geocoding pour remplir l'adresse
+      },
+      (err) => {
+        console.error(err);
+        alert("Impossible de récupérer votre position.");
+        setIsLocating(false);
+      }
+    );
   };
 
   const startAnalysis = async () => {
@@ -56,10 +81,26 @@ export default function DemanderPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!iaResult) return;
+    if (!iaResult || !file) return;
 
     setIsSubmitting(true);
     try {
+      // 1. Upload photo to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `requests/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('interventions')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('interventions')
+        .getPublicUrl(filePath);
+
+      // 2. Insert mission with photo_url
       const { error } = await supabase
         .from("missions")
         .insert([
@@ -70,7 +111,10 @@ export default function DemanderPage() {
             customer_phone: formData.phone,
             location: formData.address,
             description: extraDesc || iaResult.description_probleme,
-            price: iaResult.estimation_prix_max, // Using max estimation as default price for now
+            price: iaResult.estimation_prix_max,
+            photo_url: publicUrl,
+            lat: coords?.lat,
+            lng: coords?.lng,
             created_at: new Date().toISOString(),
           },
         ]);
@@ -247,7 +291,17 @@ export default function DemanderPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-primary-dk mb-1.5">Adresse exacte</label>
+                  <div className="flex justify-between items-end mb-1.5">
+                    <label className="block text-sm font-semibold text-primary-dk">Adresse exacte</label>
+                    <button 
+                      type="button" 
+                      onClick={handleGetLocation} 
+                      className="text-[10px] font-black uppercase text-primary hover:underline flex items-center gap-1"
+                      disabled={isLocating}
+                    >
+                      {isLocating ? "Localisation..." : coords ? "Position enregistrée ✅" : "Utiliser ma position 📍"}
+                    </button>
+                  </div>
                   <input type="text" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="form-input bg-bg-body border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3" placeholder="Numéro, rue, bâtiment, code postal..." />
                 </div>
                 
