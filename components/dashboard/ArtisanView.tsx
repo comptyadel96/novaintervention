@@ -40,7 +40,7 @@ const graphPanels = [
   },
 ];
 
-export function ArtisanView({ user }: { user: any }) {
+export function ArtisanView({ user, profile, stats }: { user: any; profile?: any; stats?: any }) {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="flex flex-col gap-6 lg:flex-row lg:justify-between lg:items-end">
