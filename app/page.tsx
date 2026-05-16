@@ -13,46 +13,54 @@ export default function Home() {
       <Header />
       <main className="main-content">
         {/* ── HERO ── */}
-        <section className="relative w-screen left-1/2 -translate-x-1/2 min-h-[85vh] md:min-h-[85vh] flex items-center py-12 md:py-32 -mt-[5.5rem] mb-16 overflow-hidden">
-          {/* Background Image — single image with object-cover for both mobile & desktop */}
+        <section className="relative w-screen left-1/2 -translate-x-1/2 min-h-[75vh] md:min-h-[85vh] flex items-center py-20 md:py-32 -mt-22 mb-16 overflow-hidden">
+          {/* Background Image Setup */}
           <div className="absolute inset-0 z-0">
             <Image
               src="/images/main-slider/right.png"
               alt="Artisan plombier"
               fill
-              className="object-cover object-[90%_center]"
+              className="hero-bg-image hide-mobile"
               priority
             />
-            {/* Blue gradient overlay (left side) — matches reference */}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(11, 58, 107, 0.92) 0%, rgba(12, 76, 147, 0.75) 40%, rgba(12, 76, 147, 0.3) 65%, transparent 85%)" }}></div>
+            <Image
+              src="/images/main-slider/right-2.png"
+              alt="Artisan plombier mobile"
+              fill
+              className="hero-bg-image mobile-hero-image hide-desktop"
+              priority
+            />
+            {/* Seamless linear gradient for elegant contrast without borders */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent"></div>
           </div>
 
           <div className="w-full max-w-7xl mx-auto px-4 md:px-6 relative z-10 flex mt-16">
             {/* Texts directly over the soft gradient - No borders or hard boxes */}
             <div className="max-w-[42rem] animate-fade-in pr-0 md:pr-6">
-              <p className="label" style={{ color: "rgba(255,255,255,0.8)" }}>Plomberie Urgence & Maintenance</p>
-              <h1 className="page-title mb-6 md:mb-8" style={{ color: "white" }}>
+              {/* <p className="label">Plomberie Urgence & Maintenance</p> */}
+              <h1 className="page-title mb-6 md:mb-8">
                 Plombier en urgence & maintenance
               </h1>
-              <p className="text-sm sm:text-base md:text-xl font-medium leading-6 sm:leading-8 mb-6 md:mb-10 max-w-xl" style={{ color: "rgba(255,255,255,0.85)" }}>
-                Artisan certifié près de chez vous — disponible 24h/24 et 7j/7
-              </p>
-              <p className="text-sm sm:text-base md:text-lg leading-6 sm:leading-7 mb-8 md:mb-10 max-w-xl" style={{ color: "rgba(255,255,255,0.75)" }}>
-                Fuite d&apos;eau, canalisation ou évacuation bouchée, chauffe-eau en panne ? Trouvez rapidement un artisan local qualifié pour vos dépannages en plomberie.
+              <p
+                className="text-base sm:text-lg md:text-xl font-medium leading-7 sm:leading-8 mb-10 max-w-xl"
+                style={{ color: "var(--text-main)" }}
+              >
+                Fuite d'eau, canalisation ou évacuation bouchée, chauffe-eau en
+                panne ? Trouvez rapidement un artisan local qualifié pour vos
+                dépannages en plomberie.
               </p>
 
-              <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8 md:mb-10">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-10">
                 <Link
                   href="tel:+33788209773"
-                  className="btn btn-lg w-full sm:w-auto justify-center"
-                  style={{ background: "#dc2626", color: "white", boxShadow: "0 10px 25px -5px rgba(220,38,38,0.4)" }}
+                  className="btn btn-primary btn-lg w-full sm:w-auto justify-center"
                 >
                   <span>📞</span> Appel urgent
                 </Link>
                 <Link
                   href="/demander"
-                  className="btn btn-lg w-full sm:w-auto justify-center"
-                  style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "2px solid rgba(255,255,255,0.5)", backdropFilter: "blur(8px)" }}
+                  className="btn btn-outline btn-lg w-full sm:w-auto justify-center"
+                  style={{ background: "rgba(255,255,255,0.7)" }}
                 >
                   Demander une intervention
                 </Link>
@@ -61,18 +69,17 @@ export default function Home() {
               <div className="flex flex-wrap gap-3">
                 {[
                   "2.7K+ avis",
-                  "Intervention sous 30 min",
+                  "Intervention sous 45 min",
                   "Artisans certifiés",
                 ].map((t) => (
                   <span
                     key={t}
                     className="badge"
                     style={{
-                      color: "white",
-                      background: "rgba(255,255,255,0.15)",
-                      border: "1px solid rgba(255,255,255,0.25)",
-                      backdropFilter: "blur(8px)",
-                      boxShadow: "none",
+                      color: "var(--primary-dk)",
+                      background: "rgba(255,255,255,0.9)",
+                      border: "none",
+                      boxShadow: "0 4px 10px rgba(12,76,147,0.08)",
                     }}
                   >
                     {t}
@@ -90,17 +97,27 @@ export default function Home() {
               {
                 title: "Un problème ? Décrivez-le en quelques secondes",
                 body: "Prenez une photo et expliquez votre besoin. Vous recevez une estimation claire avant intervention, sans surprise. Votre demande est analysée immédiatement pour envoyer le bon artisan.",
+                imgSrc: "/images/step__img01.png",
               },
               {
                 title: "Un artisan certifié intervient rapidement chez vous",
                 body: "Sélectionné pour son sérieux et sa réactivité, il dispose de toutes les informations pour intervenir efficacement dès le premier déplacement.",
+                imgSrc: "/images/step__img02.png",
               },
               {
                 title: "Paiement sécurisé après intervention",
                 body: "Vous ne payez qu'une fois le travail terminé et validé. Aucune mauvaise surprise, vous gardez le contrôle du début à la fin.",
+                imgSrc: "/images/step__img03.png",
               },
             ].map((item) => (
               <div key={item.title} className="card">
+                <Image
+                  src={item.imgSrc}
+                  alt={item.title}
+                  width={200}
+                  height={150}
+                  className="object-cover w-full rounded-lg my-2"
+                />
                 <h3 className="h3" style={{ marginBottom: "1rem" }}>
                   {item.title}
                 </h3>
@@ -127,9 +144,9 @@ export default function Home() {
               }}
             >
               <div>
-                <p className="label" style={{ marginBottom: "0.5rem" }}>
+                {/* <p className="label" style={{ marginBottom: "0.5rem" }}>
                   Services
-                </p>
+                </p> */}
                 <h2 className="h2">Nos services principaux</h2>
               </div>
               <Link
