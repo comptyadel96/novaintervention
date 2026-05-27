@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
 import SettingsForm from "@/components/dashboard/SettingsForm";
+import { PasswordChangeForm } from "@/components/dashboard/PasswordChangeForm";
+import { GoogleAccountLink } from "@/components/auth/GoogleAccountLink";
+import { getSession } from "@/lib/auth/session";
 
 export default async function DashboardSettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await getSession();
 
-  if (!user) {
+  if (!session) {
     redirect("/login");
   }
 
@@ -26,8 +25,20 @@ export default async function DashboardSettingsPage() {
         </h1>
       </header>
 
-      <section className="card p-8 bg-white border border-border rounded-4xl shadow-sm">
-        <SettingsForm user={user} />
+      <section className="card p-8 bg-white border border-border rounded-4xl shadow-sm space-y-10">
+        <GoogleAccountLink user={session.user} />
+        <hr className="border-border" />
+        {session.user.hasPassword === false ? (
+          <p className="text-sm text-text-muted">
+            Ce compte n&apos;a pas de mot de passe local (connexion Google).
+            Associez Google ci-dessus ou contactez le support pour ajouter un mot
+            de passe.
+          </p>
+        ) : (
+          <PasswordChangeForm />
+        )}
+        <hr className="border-border" />
+        <SettingsForm user={session.user} />
       </section>
     </div>
   );

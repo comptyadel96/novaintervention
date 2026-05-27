@@ -1,189 +1,398 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { Users, Briefcase, DollarSign, ShieldCheck, Search, CheckCircle2, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  clientAdminApi,
+  clientProfilesApi,
+} from "@/services/api/client";
+import {
+  Users,
+  Briefcase,
+  DollarSign,
+  ShieldCheck,
+  CheckCircle2,
+  XCircle,
+  Ban,
+} from "lucide-react";
+import { MissionCommissionBreakdown } from "@/components/missions/MissionCommissionBreakdown";
+import { getErrorMessage } from "@/lib/api/errors";
+import type {
+  AdminDashboard,
+  AdminUser,
+  AuthUser,
+  Mission,
+  Profile,
+} from "@/types/domain";
 
-export function AdminView({ user, profile }: { user: any; profile: any }) {
-  const supabase = createClient();
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [missions, setMissions] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"overview" | "artisans" | "missions">("overview");
+export function AdminView({
+  user,
+  profile,
+}: {
+  user: AuthUser;
+  profile: Profile | null;
+}) {
+  const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "users" | "artisans" | "missions"
+  >("overview");
+  const [error, setError] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState("");
+
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      const [dash, usersRes, missionsRes] = await Promise.all([
+        clientAdminApi.getDashboard(),
+        clientAdminApi.listUsers({ limit: 100 }),
+        clientAdminApi.listMissions({ limit: 50 }),
+      ]);
+      setDashboard(dash);
+      setUsers(
+        Array.isArray(usersRes)
+          ? usersRes
+          : (usersRes.items ?? []),
+      );
+      setMissions(missionsRes);
+    } catch (e) {
+      setError(getErrorMessage(e, "Impossible de charger les données admin."));
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchData() {
-      const { data: pData } = await supabase.from("profiles").select("*");
-      if (pData) setProfiles(pData);
+    load();
+  }, [load]);
 
-      const { data: mData } = await supabase.from("missions").select("*, artisan:profiles!missions_artisan_id_fkey(first_name, last_name)").order("created_at", { ascending: false });
-      if (mData) setMissions(mData);
-    }
-    fetchData();
-  }, [supabase]);
+  const artisans = users.filter((u) => u.role === "artisan");
+  const rate = dashboard?.revenue.commissionRate ?? 0.2;
 
-  const toggleVerification = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_verified: !currentStatus })
-      .eq("id", id);
-    if (!error) {
-      setProfiles(profiles.map(p => p.id === id ? { ...p, is_verified: !currentStatus } : p));
-    } else {
-      alert("Erreur lors de la modification.");
+  const toggleVerification = async (id: string, approved: boolean) => {
+    try {
+      await clientProfilesApi.setVerification(id, approved ? "approved" : "rejected");
+      await load();
+    } catch {
+      alert("Erreur lors de la validation artisan.");
     }
   };
 
-  const artisans = profiles.filter(p => p.role === "artisan");
-  const pendingMissions = missions.filter(m => m.status === "pending" || m.status === "confirmed" || m.status === "in_progress" || m.status === "waiting_confirmation");
-  
-  // Total Revenue calculation (all completed missions price sum)
-  const completedMissions = missions.filter(m => m.status === 'completed');
-  const totalVolume = completedMissions.reduce((acc, m) => acc + (Number(m.price) || 0), 0);
-  const platformFee = totalVolume * 0.20;
+  const handleBan = async (userId: string) => {
+    const reason = window.prompt("Motif du bannissement :");
+    if (!reason?.trim()) return;
+    try {
+      await clientAdminApi.banUser(userId, reason.trim());
+      await load();
+    } catch (e) {
+      alert(getErrorMessage(e, "Bannissement impossible."));
+    }
+  };
+
+  const handleUnban = async (userId: string) => {
+    try {
+      await clientAdminApi.unbanUser(userId);
+      await load();
+    } catch (e) {
+      alert(getErrorMessage(e, "Débannissement impossible."));
+    }
+  };
+
+  const filteredUsers = users.filter(
+    (u) =>
+      !userSearch ||
+      u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+      `${u.firstName ?? ""} ${u.lastName ?? ""}`
+        .toLowerCase()
+        .includes(userSearch.toLowerCase()),
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <p className="text-red-600 font-bold uppercase tracking-widest text-xs mb-2">Accès Restreint • Super Admin</p>
-          <h1 className="text-4xl font-extrabold text-primary-dk tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-            Tour de Contrôle Nova
+          <p className="text-red-600 font-bold uppercase tracking-widest text-xs mb-2">
+            Admin · Commission {(rate * 100).toFixed(0)} %
+          </p>
+          <h1
+            className="text-4xl font-extrabold text-primary-dk tracking-tight"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Tour de contrôle Nova
           </h1>
         </div>
-        <div className="flex bg-white rounded-2xl p-1 border border-border shadow-sm">
-          {(["overview", "artisans", "missions"] as const).map(tab => (
+        <div className="flex bg-white rounded-2xl p-1 border border-border shadow-sm flex-wrap">
+          {(
+            [
+              ["overview", "Vue d'ensemble"],
+              ["users", "Utilisateurs"],
+              ["artisans", "Artisans"],
+              ["missions", "Missions"],
+            ] as const
+          ).map(([tab, label]) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                activeTab === tab ? "bg-red-50 text-red-600 shadow-sm" : "text-text-muted hover:text-primary-dk"
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                activeTab === tab
+                  ? "bg-red-50 text-red-600 shadow-sm"
+                  : "text-text-muted hover:text-primary-dk"
               }`}
             >
-              {tab === "overview" ? "Vue d'ensemble" : tab === "artisans" ? "Artisans" : "Missions"}
+              {label}
             </button>
           ))}
         </div>
       </header>
 
-      {activeTab === "overview" && (
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+          {error}
+        </p>
+      )}
+
+      {activeTab === "overview" && dashboard && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="card p-6 bg-white border border-border rounded-[2rem] shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-                <Briefcase size={20} />
-              </div>
-              <p className="text-2xl font-black text-primary-dk mb-1">{missions.length}</p>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Missions Totales</p>
-            </div>
-            <div className="card p-6 bg-white border border-border rounded-[2rem] shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-4">
-                <Users size={20} />
-              </div>
-              <p className="text-2xl font-black text-primary-dk mb-1">{artisans.length}</p>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Artisans Inscrits</p>
-            </div>
-            <div className="card p-6 bg-white border border-border rounded-[2rem] shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center mb-4">
-                <DollarSign size={20} />
-              </div>
-              <p className="text-2xl font-black text-primary-dk mb-1">{totalVolume.toLocaleString('fr-FR')} €</p>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Volume d'affaires</p>
-            </div>
-            <div className="card p-6 bg-red-600 text-white rounded-[2rem] shadow-lg shadow-red-600/20">
-              <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center mb-4">
-                <ShieldCheck size={20} />
-              </div>
-              <p className="text-2xl font-black mb-1">{platformFee.toLocaleString('fr-FR')} €</p>
-              <p className="text-xs font-bold text-white/80 uppercase tracking-wider">Commissions (20%)</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              icon={Briefcase}
+              label="Missions"
+              value={String(dashboard.missions.total)}
+              sub={`${dashboard.missions.active} actives`}
+            />
+            <StatCard
+              icon={Users}
+              label="Utilisateurs"
+              value={String(dashboard.users.total)}
+              sub={`+${dashboard.users.newLast30Days} / 30 j`}
+            />
+            <StatCard
+              icon={DollarSign}
+              label="GMV total"
+              value={`${dashboard.revenue.totalGmv.toLocaleString("fr-FR")} €`}
+              sub={`${dashboard.revenue.thisMonth.toLocaleString("fr-FR")} € ce mois`}
+            />
+            <StatCard
+              icon={ShieldCheck}
+              label="Commission Nova"
+              value={`${dashboard.revenue.platformCommissionTotal.toLocaleString("fr-FR")} €`}
+              sub={`${dashboard.revenue.platformCommissionThisMonth.toLocaleString("fr-FR")} € ce mois`}
+              highlight
+            />
           </div>
-          <div className="bg-white border border-border rounded-[2.5rem] p-8">
-            <h2 className="text-xl font-bold mb-4 text-primary-dk">Activité Récente</h2>
-            <p className="text-text-muted">Des graphiques globaux seront intégrés ici.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <MiniStat label="Bannis" value={dashboard.users.banned} />
+            <MiniStat
+              label="Artisans en attente"
+              value={dashboard.artisans.pendingVerification}
+            />
+            <MiniStat label="Terminées" value={dashboard.missions.completed} />
+            <MiniStat label="Aujourd'hui GMV" value={`${dashboard.revenue.today} €`} />
           </div>
+          <p className="text-text-muted text-sm">
+            Connecté : {profile?.email ?? user.email}
+          </p>
+        </div>
+      )}
+
+      {activeTab === "users" && (
+        <div className="bg-white border border-border rounded-4xl p-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <h2 className="text-xl font-bold text-primary-dk flex-1">
+              Utilisateurs
+            </h2>
+            <input
+              type="search"
+              placeholder="Rechercher email, nom…"
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="form-input max-w-xs"
+            />
+          </div>
+          <UserTable
+            users={filteredUsers}
+            onBan={handleBan}
+            onUnban={handleUnban}
+          />
         </div>
       )}
 
       {activeTab === "artisans" && (
-        <div className="bg-white border border-border rounded-[2.5rem] p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-primary-dk mb-6 flex items-center gap-2"><Users size={24} className="text-primary"/> Gestion des Artisans</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Nom</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Contact</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Spécialité</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Statut</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Action</th>
+        <div className="bg-white border border-border rounded-4xl p-8 shadow-sm">
+          <h2 className="text-xl font-bold text-primary-dk mb-6">
+            Validation artisans
+          </h2>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-border text-xs uppercase text-text-muted">
+                <th className="pb-3">Nom</th>
+                <th className="pb-3">Email</th>
+                <th className="pb-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {artisans.map((a) => (
+                <tr key={a.id} className="border-b border-border last:border-0">
+                  <td className="py-3 font-bold">
+                    {a.firstName} {a.lastName}
+                  </td>
+                  <td className="py-3 text-sm text-text-muted">{a.email}</td>
+                  <td className="py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => toggleVerification(a.id, true)}
+                      className="btn btn-sm btn-primary mr-2"
+                    >
+                      <CheckCircle2 size={14} /> Approuver
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleVerification(a.id, false)}
+                      className="btn btn-sm btn-outline"
+                    >
+                      <XCircle size={14} /> Rejeter
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {artisans.map(a => (
-                  <tr key={a.id} className="border-b border-border last:border-0 hover:bg-bg-body transition-colors">
-                    <td className="py-4 font-bold text-primary-dk">{a.first_name || "N/A"} {a.last_name || ""}</td>
-                    <td className="py-4 text-sm text-text-muted">{a.email}<br/>{a.phone || "Pas de numéro"}</td>
-                    <td className="py-4 text-sm font-medium text-primary">{a.specialty || "Généraliste"}</td>
-                    <td className="py-4">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${a.is_verified ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-                        {a.is_verified ? "Vérifié" : "En attente"}
-                      </span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <button 
-                        onClick={() => toggleVerification(a.id, !!a.is_verified)}
-                        className={`px-4 py-2 rounded-xl flex items-center gap-2 ml-auto text-xs font-bold uppercase tracking-widest transition-colors ${
-                          a.is_verified ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-600 text-white hover:bg-green-700 shadow-md shadow-green-600/20"
-                        }`}
-                      >
-                        {a.is_verified ? <><XCircle size={14}/> Révoquer</> : <><CheckCircle2 size={14}/> Valider Profil</>}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
       {activeTab === "missions" && (
-        <div className="bg-white border border-border rounded-[2.5rem] p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-primary-dk mb-6 flex items-center gap-2"><Briefcase size={24} className="text-primary"/> Historique des Missions</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Date</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Mission</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Artisan Assigné</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider">Prix</th>
-                  <th className="pb-4 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                {missions.map(m => (
-                  <tr key={m.id} className="border-b border-border last:border-0 hover:bg-bg-body transition-colors">
-                    <td className="py-4 text-sm font-medium text-text-muted">{new Date(m.created_at).toLocaleDateString('fr-FR')}</td>
-                    <td className="py-4 font-bold text-primary-dk">{m.title}</td>
-                    <td className="py-4 text-sm font-medium text-primary">
-                      {m.artisan ? `${m.artisan.first_name || ""} ${m.artisan.last_name || ""}` : "Non assigné"}
-                    </td>
-                    <td className="py-4 font-black text-primary-dk">{m.price ? `${m.price} €` : "—"}</td>
-                    <td className="py-4 text-right">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        m.status === 'completed' ? 'bg-green-100 text-green-700' : m.status === 'waiting_confirmation' ? 'bg-orange-100 text-orange-700' : m.status === 'pending' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-                      }`}>
-                        {m.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="bg-white border border-border rounded-4xl p-8 shadow-sm space-y-6">
+          <h2 className="text-xl font-bold text-primary-dk">
+            Missions ({missions.length})
+          </h2>
+          {missions.map((m) => (
+            <div
+              key={m.id}
+              className="border border-border rounded-2xl p-4 space-y-3"
+            >
+              <div className="flex justify-between gap-4 flex-wrap">
+                <div>
+                  <p className="font-bold text-primary-dk">{m.title}</p>
+                  <p className="text-xs text-text-muted">{m.status}</p>
+                </div>
+                <p className="font-black">
+                  {m.price_final ?? m.price ?? "—"} €
+                </p>
+              </div>
+              <MissionCommissionBreakdown mission={m} />
+            </div>
+          ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  highlight,
+}: {
+  icon: typeof Users;
+  label: string;
+  value: string;
+  sub: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`card p-6 rounded-4xl shadow-sm ${
+        highlight ? "bg-red-600 text-white" : "bg-white border border-border"
+      }`}
+    >
+      <Icon
+        size={20}
+        className={highlight ? "text-white/80 mb-3" : "text-primary mb-3"}
+      />
+      <p className={`text-2xl font-black ${highlight ? "" : "text-primary-dk"}`}>
+        {value}
+      </p>
+      <p
+        className={`text-xs font-bold uppercase tracking-wider mt-1 ${
+          highlight ? "text-white/80" : "text-text-muted"
+        }`}
+      >
+        {label}
+      </p>
+      <p className={`text-sm mt-2 ${highlight ? "text-white/70" : "text-text-muted"}`}>
+        {sub}
+      </p>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-2xl bg-bg-alt border border-border p-4">
+      <p className="text-[10px] uppercase font-bold text-text-muted">{label}</p>
+      <p className="text-lg font-black text-primary-dk">{value}</p>
+    </div>
+  );
+}
+
+function UserTable({
+  users,
+  onBan,
+  onUnban,
+}: {
+  users: AdminUser[];
+  onBan: (id: string) => void;
+  onUnban: (id: string) => void;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-border text-xs uppercase text-text-muted">
+            <th className="pb-3">Email</th>
+            <th className="pb-3">Rôle</th>
+            <th className="pb-3">Statut</th>
+            <th className="pb-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((u) => (
+            <tr key={u.id} className="border-b border-border last:border-0">
+              <td className="py-3">{u.email}</td>
+              <td className="py-3">{u.role}</td>
+              <td className="py-3">
+                {u.isBanned ? (
+                  <span className="text-red-600 font-bold">Banni</span>
+                ) : (
+                  <span className="text-green-700">Actif</span>
+                )}
+              </td>
+              <td className="py-3 text-right">
+                {u.role !== "admin" &&
+                  (u.isBanned ? (
+                    <button
+                      type="button"
+                      onClick={() => onUnban(u.id)}
+                      className="btn btn-sm btn-outline"
+                    >
+                      Débannir
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onBan(u.id)}
+                      className="btn btn-sm btn-outline text-red-600"
+                    >
+                      <Ban size={14} className="inline mr-1" />
+                      Bannir
+                    </button>
+                  ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

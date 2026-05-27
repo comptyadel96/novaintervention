@@ -1,32 +1,30 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
-
-type PlanningEvent = {
-  id: string;
-  title: string;
-  status: string;
-  scheduled_at: string | null;
-  location: string;
-};
+import { getSession, getAccessToken } from "@/lib/auth/session";
+import { missionsApi } from "@/services/api/missions";
+import type { Mission } from "@/types/domain";
 
 export default async function DashboardPlanningPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await getSession();
 
-  if (!user) {
+  if (!session) {
     redirect("/login");
   }
 
-  const { data, error } = await supabase
-    .from("missions")
-    .select("id, title, status, scheduled_at, location")
-    .eq("artisan_id", user.id)
-    .order("scheduled_at", { ascending: true });
+  const token = await getAccessToken();
+  let events: Mission[] | null = null;
+  let error: string | null = null;
 
-  const events = data as PlanningEvent[] | null;
+  if (token) {
+    try {
+      events = await missionsApi.list(token, {
+        artisan_id: session.user.id,
+      });
+    } catch (err) {
+      error =
+        err instanceof Error ? err.message : "Impossible de charger le planning.";
+    }
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -67,7 +65,7 @@ export default async function DashboardPlanningPage() {
 
           {error ? (
             <div className="rounded-4xl bg-red-50 border border-red-200 p-6 text-red-700">
-              Impossible de charger le planning. Vérifiez la connexion Supabase.
+              {error}
             </div>
           ) : !events || events.length === 0 ? (
             <div className="rounded-4xl bg-bg-alt p-8 text-center text-text-muted">
@@ -75,7 +73,7 @@ export default async function DashboardPlanningPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {events.map((event: PlanningEvent) => (
+              {events.map((event) => (
                 <div
                   key={event.id}
                   className="rounded-4xl bg-bg-alt p-5 border border-border hover:border-primary transition-colors"
@@ -122,17 +120,15 @@ export default async function DashboardPlanningPage() {
               <div className="flex items-center justify-between text-sm">
                 <span>Réservations confirmées</span>
                 <span className="font-bold text-primary-dk">
-                  {events?.filter(
-                    (event: PlanningEvent) => event.status === "confirmed",
-                  ).length ?? 0}
+                  {events?.filter((event) => event.status === "confirmed")
+                    .length ?? 0}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span>Interventions spécialisées</span>
                 <span className="font-bold text-primary-dk">
-                  {events?.filter(
-                    (event: PlanningEvent) => event.status === "completed",
-                  ).length ?? 0}
+                  {events?.filter((event) => event.status === "completed")
+                    .length ?? 0}
                 </span>
               </div>
             </div>

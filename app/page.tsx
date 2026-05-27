@@ -34,11 +34,11 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent"></div>
           </div>
 
-          <div className="w-full max-w-7xl mx-auto px-4 md:px-6 relative z-10 flex mt-16">
+          <div className="w-full max-w-7xl mx-auto px-4 md:px-6 relative z-10 flex ">
             {/* Texts directly over the soft gradient - No borders or hard boxes */}
-            <div className="max-w-[42rem] animate-fade-in pr-0 md:pr-6">
+            <div className="max-w-[42rem] animate-fade-in pr-0 md:pr-6 mb-8">
               {/* <p className="label">Plomberie Urgence & Maintenance</p> */}
-              <h1 className="page-title mb-6 md:mb-8">
+              <h1 className="page-title   mb-16">
                 Plombier en urgence & maintenance
               </h1>
               <p
@@ -71,6 +71,7 @@ export default function Home() {
                   "2.7K+ avis",
                   "Intervention sous 45 min",
                   "Artisans certifiés",
+                  "Prix encadrés"
                 ].map((t) => (
                   <span
                     key={t}
@@ -92,6 +93,7 @@ export default function Home() {
 
         {/* ── HOW IT WORKS ── */}
         <section style={{ marginTop: "1.5rem" }}>
+          <h2 className="h2">Comment ça marche ?</h2>
           <div className="grid-3">
             {[
               {
@@ -131,8 +133,8 @@ export default function Home() {
 
         {/* ── SERVICES PRINCIPAUX ── */}
         <section
-          className="relative w-screen left-1/2 -translate-x-1/2 bg-dots overflow-hidden py-16 mb-16 border-y"
-          style={{ borderColor: "var(--border)" }}
+          className="relative w-screen left-1/2 -translate-x-1/2 overflow-hidden py-16 mb-16 border-y"
+          style={{ borderColor: "var(--border)", background: "var(--bg-alt)" }}
         >
           <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
             <div
@@ -240,8 +242,8 @@ export default function Home() {
 
         {/* ── AVIS CLIENTS ── */}
         <section
-          className="relative w-screen left-1/2 -translate-x-1/2 bg-grid py-20 border-y"
-          style={{ borderColor: "var(--border)", marginTop: "4rem" }}
+          className="relative w-screen left-1/2 -translate-x-1/2 py-20 border-y"
+          style={{ borderColor: "var(--border)", marginTop: "4rem", background: "var(--bg-body)" }}
         >
           <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
             <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>

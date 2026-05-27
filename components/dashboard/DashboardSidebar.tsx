@@ -10,22 +10,21 @@ import {
   Briefcase, 
   History,
   LogOut,
-  Bell
 } from "lucide-react";
-import { createClient } from "@/utils/supabase/client";
+import { authApi } from "@/services/api/auth";
 import { useRouter } from "next/navigation";
+import type { UserRole } from "@/types/domain";
 
 interface SidebarProps {
-  role: "client" | "artisan" | "admin";
+  role: UserRole;
 }
 
 export function DashboardSidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await authApi.logout();
     router.push("/");
     router.refresh();
   };

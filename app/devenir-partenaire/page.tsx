@@ -3,6 +3,14 @@
 import { useState, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { FormField, inputClassName } from "@/components/forms/FormField";
+import {
+  validateCity,
+  validateName,
+  validatePhone,
+  validateSiret,
+  validateSpecialty,
+} from "@/lib/forms/validate";
 
 // Average baskets based on developer brief specialties
 const SPECIALTIES = [
@@ -166,6 +174,27 @@ export default function DevenirPartenairePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const errors: Record<string, string> = {};
+    const fn = validateName(formData.firstName, "prénom");
+    const ln = validateName(formData.lastName, "nom");
+    const ph = validatePhone(formData.phone);
+    const cityCheck = validateCity(formData.city);
+    const specialtyCheck = validateSpecialty(formData.specialty);
+    const siretCheck = validateSiret(formData.siret);
+    if (!fn.valid) errors.firstName = fn.message!;
+    if (!ln.valid) errors.lastName = ln.message!;
+    if (!ph.valid) errors.phone = ph.message!;
+    if (!cityCheck.valid) errors.city = cityCheck.message!;
+    if (!specialtyCheck.valid) errors.specialty = specialtyCheck.message!;
+    if (!siretCheck.valid) errors.siret = siretCheck.message!;
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+    setFieldErrors({});
+
     console.log("== NEW ARTISAN LEAD ==");
     console.log(formData);
     setIsSubmitted(true);
@@ -351,110 +380,127 @@ export default function DevenirPartenairePage() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-5">
+              <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-5" noValidate>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-primary-dk mb-1.5">
-                      Prénom
-                    </label>
+                  <FormField
+                    label="Prénom"
+                    htmlFor="partner-firstName"
+                    error={fieldErrors.firstName}
+                    required
+                  >
                     <input
+                      id="partner-firstName"
                       type="text"
-                      required
                       value={formData.firstName}
                       onChange={(e) =>
                         setFormData({ ...formData, firstName: e.target.value })
                       }
-                      className="form-input w-full bg-bg-alt/50"
+                      className={inputClassName(!!fieldErrors.firstName)}
                       placeholder="Jean"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-primary-dk mb-1.5">
-                      Nom
-                    </label>
+                  </FormField>
+                  <FormField
+                    label="Nom"
+                    htmlFor="partner-lastName"
+                    error={fieldErrors.lastName}
+                    required
+                  >
                     <input
+                      id="partner-lastName"
                       type="text"
-                      required
                       value={formData.lastName}
                       onChange={(e) =>
                         setFormData({ ...formData, lastName: e.target.value })
                       }
-                      className="form-input w-full bg-bg-alt/50"
+                      className={inputClassName(!!fieldErrors.lastName)}
                       placeholder="Dupont"
                     />
-                  </div>
+                  </FormField>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-primary-dk mb-1.5">
-                    Téléphone Professionnel
-                  </label>
+                <FormField
+                  label="Téléphone professionnel"
+                  htmlFor="partner-phone"
+                  error={fieldErrors.phone}
+                  hint="10 chiffres minimum"
+                  required
+                >
                   <input
+                    id="partner-phone"
                     type="tel"
-                    required
                     value={formData.phone}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="form-input w-full bg-bg-alt/50"
-                    placeholder="06 00 00 00 00"
+                    className={inputClassName(!!fieldErrors.phone)}
+                    placeholder="06 12 34 56 78"
                   />
-                </div>
+                </FormField>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-primary-dk mb-1.5">
-                      Ville
-                    </label>
+                  <FormField
+                    label="Ville"
+                    htmlFor="partner-city"
+                    error={fieldErrors.city}
+                    required
+                  >
                     <input
+                      id="partner-city"
                       type="text"
-                      required
                       value={formData.city}
                       onChange={(e) =>
                         setFormData({ ...formData, city: e.target.value })
                       }
-                      className="form-input w-full bg-bg-alt/50"
-                      placeholder="Paris, etc."
+                      className={inputClassName(!!fieldErrors.city)}
+                      placeholder="Paris"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-primary-dk mb-1.5">
-                      Métier
-                    </label>
+                  </FormField>
+                  <FormField
+                    label="Métier"
+                    htmlFor="partner-specialty"
+                    error={fieldErrors.specialty}
+                    required
+                  >
                     <select
-                      required
+                      id="partner-specialty"
                       value={formData.specialty}
                       onChange={(e) =>
                         setFormData({ ...formData, specialty: e.target.value })
                       }
-                      className="form-input w-full bg-bg-alt/50"
+                      className={inputClassName(!!fieldErrors.specialty)}
                       style={{ appearance: "auto" }}
                     >
-                      <option value="">Expertise...</option>
+                      <option value="">Choisir une expertise…</option>
                       {SPECIALTIES.map((s) => (
-                        <option key={s.name}>{s.name}</option>
+                        <option key={s.name} value={s.name}>
+                          {s.name}
+                        </option>
                       ))}
                     </select>
-                  </div>
+                  </FormField>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-primary-dk mb-1.5">
-                    Numéro SIRET
-                  </label>
+                <FormField
+                  label="Numéro SIRET"
+                  htmlFor="partner-siret"
+                  error={fieldErrors.siret}
+                  hint="14 chiffres, sans espaces obligatoires."
+                  required
+                >
                   <input
+                    id="partner-siret"
                     type="text"
-                    required
+                    inputMode="numeric"
                     value={formData.siret}
                     onChange={(e) =>
                       setFormData({ ...formData, siret: e.target.value })
                     }
-                    className="form-input w-full bg-bg-alt/50"
-                    placeholder="14 chiffres"
+                    className={inputClassName(!!fieldErrors.siret)}
+                    placeholder="12345678901234"
                   />
-                </div>
+                </FormField>
 
                 <div className="mt-4">
                   <button
                     type="submit"
-                    className="btn btn-primary w-full justify-center py-4 text-lg shadow-lg shadow-primary/20"
+                    className="btn btn-primary w-full justify-center py-4 text-lg"
                   >
                     Envoyer ma candidature
                     <svg

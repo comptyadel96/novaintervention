@@ -140,29 +140,46 @@ a {
     @apply px-9 py-4 text-lg;
   }
 
-  /* Replace green/orange with beautiful blues */
+  /* Replace green/orange with beautiful blues — contraste WCAG */
   .btn-primary,
-  .btn-green {
-    background: var(--primary) !important;
-    color: white !important;
-    box-shadow: 0 10px 25px -5px rgba(12, 76, 147, 0.4);
+  .btn-green,
+  a.btn-primary,
+  button.btn-primary {
+    background: var(--primary-dk) !important;
+    color: #ffffff !important;
+    border: 2px solid var(--primary-dk) !important;
+    box-shadow: 0 10px 25px -5px rgba(11, 58, 107, 0.35);
   }
   .btn-primary:hover,
-  .btn-green:hover {
-    background: var(--primary-lt) !important;
-    box-shadow: 0 15px 35px -5px rgba(12, 76, 147, 0.5);
-    color: white !important;
+  .btn-green:hover,
+  a.btn-primary:hover,
+  button.btn-primary:hover {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 15px 35px -5px rgba(12, 76, 147, 0.45);
+  }
+  .btn-primary:disabled,
+  button.btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
   }
 
-  .btn-outline {
-    background: transparent;
-    color: var(--primary);
-    border: 2px solid var(--primary);
+  .btn-outline,
+  a.btn-outline,
+  button.btn-outline {
+    background: #ffffff !important;
+    color: var(--primary-dk) !important;
+    border: 2px solid var(--primary-dk) !important;
   }
-  .btn-outline:hover {
-    background: var(--primary);
-    color: white;
-    box-shadow: 0 10px 25px -5px rgba(12, 76, 147, 0.3);
+  .btn-outline:hover,
+  a.btn-outline:hover,
+  button.btn-outline:hover {
+    background: var(--primary-dk) !important;
+    color: #ffffff !important;
+    border-color: var(--primary-dk) !important;
+    box-shadow: 0 10px 25px -5px rgba(11, 58, 107, 0.3);
   }
 
   /* Badges */
@@ -469,6 +486,32 @@ a {
     border-color: var(--primary);
     box-shadow: 0 0 0 4px rgba(12, 76, 147, 0.1);
     background: var(--bg-body);
+  }
+  .form-input--error {
+    border-color: #dc2626 !important;
+    background: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+  }
+  .form-input--error:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+  }
+  .form-error {
+    @apply text-sm font-semibold mt-2 leading-snug;
+    color: #b91c1c;
+  }
+  .form-hint {
+    @apply text-xs mt-1.5;
+    color: var(--text-muted);
+  }
+  .form-field {
+    @apply block w-full;
+  }
+  .form-banner-error {
+    @apply mb-6 p-4 rounded-xl text-sm font-medium border;
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
   }
 
   .btn-full {

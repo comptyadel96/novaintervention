@@ -1,8 +1,10 @@
+import type { AiPlumbingInterventionType } from "@/lib/ai/intervention-labels";
+
+/** Pages services / navigation (hors analyse IA). */
 export type InterventionType =
-  | "services__emergency"
+  | AiPlumbingInterventionType
   | "services__residential"
   | "services__commercial"
-  | "services__debouchage_conduites"
   | "plomberie"
   | "electricite"
   | "chauffage"
@@ -13,16 +15,26 @@ export type InterventionType =
 export type UrgencyLevel = "urgent" | "standard" | "planifiable";
 
 export interface AnalyzePhotoResult {
-  type_intervention: InterventionType;
+  type_intervention: AiPlumbingInterventionType;
   description_probleme: string;
   niveau_urgence: UrgencyLevel;
   estimation_prix_min: number;
   estimation_prix_max: number;
   pieces_recommandees: string[];
+  conseils_client: string[];
   duree_estimee_minutes: number;
   confidence: number;
 }
 
+export interface AnalyzePhotoMeta {
+  source: "openai" | "mock";
+  model?: string;
+}
+
 export interface AnalyzePhotoRequest {
-  image: string; // base64 string
+  /** Data URL base64 */
+  image?: string;
+  /** URL publique (Cloudinary) — préféré si disponible */
+  imageUrl?: string;
+  context?: string;
 }

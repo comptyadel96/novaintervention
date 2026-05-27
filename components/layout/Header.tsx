@@ -2,7 +2,12 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { authApi } from "@/services/api/auth";
+import { displayFirstName } from "@/lib/auth/display";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import type { Session } from "@/types/domain";
+import { UserAvatar } from "@/components/user/UserAvatar";
+import { SESSION_REFRESH_EVENT } from "@/lib/auth/session-events";
 import { LayoutDashboard } from "lucide-react";
 import Image from "next/image";
 
@@ -25,32 +30,29 @@ const services = [
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
-  const supabase = createClient();
+
+  const loadSession = () => {
+    authApi
+      .getSession()
+      .then(setSession)
+      .catch(() => setSession(null));
+  };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-    };
+    loadSession();
+    const onRefresh = () => loadSession();
+    window.addEventListener(SESSION_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(SESSION_REFRESH_EVENT, onRefresh);
+  }, []);
 
-    fetchUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      router.refresh();
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase, router]);
+  const user = session?.user ?? null;
+  const profile = session?.profile ?? null;
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await authApi.logout();
+    setSession(null);
     router.refresh();
     router.push("/");
   };
@@ -58,12 +60,10 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="container site-header__inner">
-        {/* Logo */}
         <Link href="/" className="site-header__logo">
           <Image src="/images/novalogo.png" alt="Nova Intervention" width={120} height={40} />
         </Link>
 
-        {/* Desktop nav */}
         <nav className="site-header__nav hide-mobile">
           <Link href="/" className="nav-link">
             Accueil
@@ -72,7 +72,6 @@ export function Header() {
             À propos
           </Link>
 
-          {/* Services dropdown */}
           <div
             className="nav-services"
             onMouseEnter={() => setServicesOpen(true)}
@@ -104,10 +103,16 @@ export function Header() {
           </Link>
         </nav>
 
-        {/* Desktop CTAs */}
         <div className="site-header__ctas hide-mobile">
           {user ? (
             <div className="flex items-center gap-4">
+              <UserAvatar
+                user={user}
+                profile={profile}
+                size="sm"
+                cacheBust={profile?.avatar_url ?? user.avatarUrl}
+              />
+              <NotificationBell />
               <Link
                 href="/dashboard"
                 className="btn btn-outline btn-sm flex items-center gap-2"
@@ -116,7 +121,7 @@ export function Header() {
                 Tableau de bord
               </Link>
               <span className="text-sm font-bold text-primary-dk">
-                Hello, {user.user_metadata?.first_name || "Artisan"}
+                Hello, {displayFirstName(user, profile)}
               </span>
               <button
                 onClick={handleSignOut}
@@ -135,7 +140,6 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Hamburger */}
         <button
           className="site-header__burger hide-desktop"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -147,7 +151,6 @@ export function Header() {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && (
         <div className="site-header__mobile">
           {[
@@ -233,9 +236,17 @@ export function Header() {
           >
             {user ? (
               <>
-                <span className="text-sm font-bold text-primary-dk w-full">
-                  Hello, {user.user_metadata?.first_name || "Artisan"}
-                </span>
+                <div className="flex items-center gap-3 w-full">
+                  <UserAvatar
+                user={user}
+                profile={profile}
+                size="sm"
+                cacheBust={profile?.avatar_url ?? user.avatarUrl}
+              />
+                  <span className="text-sm font-bold text-primary-dk">
+                    Hello, {displayFirstName(user, profile)}
+                  </span>
+                </div>
                 <button
                   onClick={handleSignOut}
                   className="btn btn-outline btn-sm"

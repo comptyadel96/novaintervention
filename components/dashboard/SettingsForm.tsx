@@ -1,24 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { clientProfilesApi } from "@/services/api/client";
+import type { AuthUser } from "@/types/domain";
 
 interface SettingsFormProps {
-  user: {
-    user_metadata?: {
-      settings?: {
-        emailAlerts?: boolean;
-        smsAlerts?: boolean;
-        availability?: string;
-      };
-    };
-  };
+  user: AuthUser;
 }
 
 export default function SettingsForm({ user }: SettingsFormProps) {
-  const supabase = createClient();
-  const metadata = user.user_metadata ?? {};
-  const initialSettings = metadata.settings ?? {
+  const initialSettings = user.settings ?? {
     emailAlerts: true,
     smsAlerts: false,
     availability: "Disponible",
@@ -41,23 +32,20 @@ export default function SettingsForm({ user }: SettingsFormProps) {
     setLoading(true);
     setMessage(null);
 
-    const { error } = await supabase.auth.updateUser({
-      data: {
-        ...metadata,
+    try {
+      await clientProfilesApi.updateMe({
         settings: {
           emailAlerts,
           smsAlerts,
           availability,
         },
-      },
-    });
+      });
+      setMessage("Paramètres sauvegardés.");
+    } catch {
+      setMessage("Impossible de sauvegarder les paramètres.");
+    }
 
     setLoading(false);
-    setMessage(
-      error
-        ? "Impossible de sauvegarder les paramètres."
-        : "Paramètres sauvegardés.",
-    );
   }
 
   return (
@@ -119,6 +107,12 @@ export default function SettingsForm({ user }: SettingsFormProps) {
           <option>Indisponible</option>
         </select>
       </label>
+
+      <p className="text-sm text-text-muted">
+        <a href="/verify-phone" className="text-primary font-semibold hover:underline">
+          Lier ou vérifier votre numéro de téléphone →
+        </a>
+      </p>
 
       <button
         type="submit"
