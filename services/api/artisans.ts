@@ -35,6 +35,7 @@ export const artisansApi = {
       period?: AccountingPeriod;
       items?: RawAccountingItem[];
       totalRevenue?: number;
+      totalGmv?: number;
     }>(`/artisans/me/accounting?${q}`, { token });
 
     return {

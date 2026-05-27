@@ -165,6 +165,7 @@ export default function DevenirPartenairePage() {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Earnings calculation: (Missions * AvgBasket) * 4 weeks * 0.8 (minus 20% commission)
   const monthlyEarnings = useMemo(() => {
