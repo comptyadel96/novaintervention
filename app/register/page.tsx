@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -8,6 +8,7 @@ import { AuthMethodTabs } from "@/components/auth/AuthMethodTabs";
 import { SmsAuthPanel } from "@/components/auth/SmsAuthPanel";
 import { FormField, inputClassName } from "@/components/forms/FormField";
 import { GoogleSignInSection } from "@/components/auth/GoogleSignInSection";
+import { loadGoogleIdentityScript } from "@/lib/auth/google-identity";
 import { authApi } from "@/services/api/auth";
 import { getErrorMessage } from "@/lib/api/errors";
 import {
@@ -41,6 +42,10 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RegisterErrors>({});
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    loadGoogleIdentityScript().catch(() => {});
+  }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

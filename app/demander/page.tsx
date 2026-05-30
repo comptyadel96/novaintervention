@@ -17,6 +17,7 @@ import {
 } from "@/components/demander/DemanderCoordinatesStep";
 import { useRouter } from "next/navigation";
 import { isProfileComplete } from "@/lib/auth/profile-completion";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 
 const steps = ["Photo IA", "Estimation", "Coordonnées"];
@@ -287,8 +288,13 @@ export default function DemanderPage() {
                   disabled={isLoading} 
                 />
                 {preview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview} alt="Aperçu" className="max-h-48 rounded-xl object-cover shadow-sm mb-4" />
+                  <OptimizedImage
+                    src={preview}
+                    alt="Aperçu"
+                    width={320}
+                    height={192}
+                    className="max-h-48 rounded-xl object-cover shadow-sm mb-4"
+                  />
                 ) : (
                   <>
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-primary mb-4"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>

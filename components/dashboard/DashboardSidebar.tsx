@@ -10,6 +10,7 @@ import {
   Briefcase, 
   History,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { authApi } from "@/services/api/auth";
 import { useRouter } from "next/navigation";
@@ -29,18 +30,31 @@ export function DashboardSidebar({ role }: SidebarProps) {
     router.refresh();
   };
 
-  const navItems = role === "artisan" ? [
-    { label: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Missions", href: "/dashboard/missions", icon: Briefcase },
-    { label: "Planning", href: "/dashboard/planning", icon: ClipboardList },
-    { label: "Profil Pro", href: "/dashboard/profile", icon: User },
-    { label: "Paramètres", href: "/dashboard/settings", icon: Settings },
-  ] : [
-    { label: "Carnet Nova", href: "/dashboard", icon: History },
-    { label: "Mes Demandes", href: "/dashboard/requests", icon: ClipboardList },
-    { label: "Mon Profil", href: "/dashboard/profile", icon: User },
-    { label: "Paramètres", href: "/dashboard/settings", icon: Settings },
-  ];
+  const navItems =
+    role === "admin"
+      ? [
+          { label: "Tour de contrôle", href: "/dashboard", icon: Shield },
+          { label: "Mon Profil", href: "/dashboard/profile", icon: User },
+          { label: "Paramètres", href: "/dashboard/settings", icon: Settings },
+        ]
+      : role === "artisan"
+        ? [
+            { label: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
+            { label: "Missions", href: "/dashboard/missions", icon: Briefcase },
+            { label: "Planning", href: "/dashboard/planning", icon: ClipboardList },
+            { label: "Profil Pro", href: "/dashboard/profile", icon: User },
+            { label: "Paramètres", href: "/dashboard/settings", icon: Settings },
+          ]
+        : [
+            { label: "Carnet Nova", href: "/dashboard", icon: History },
+            {
+              label: "Mes Demandes",
+              href: "/dashboard/requests",
+              icon: ClipboardList,
+            },
+            { label: "Mon Profil", href: "/dashboard/profile", icon: User },
+            { label: "Paramètres", href: "/dashboard/settings", icon: Settings },
+          ];
 
   return (
     <aside className="w-64 h-screen fixed left-0 top-0 bg-white/40 backdrop-blur-xl border-r border-border flex flex-col z-50">

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Mission } from "@/types/domain";
 import { MISSION_STATUS_LABELS } from "@/lib/missions/labels";
+import { MissionPhoto } from "@/components/ui/OptimizedImage";
 import {
   canAcceptOnMap,
   missionPhotoUrl,
@@ -114,11 +115,10 @@ export function MissionMapDetailPanel({
           rel="noopener noreferrer"
           className="block mb-3 rounded-xl overflow-hidden border border-border"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <MissionPhoto
             src={photo}
             alt="Photo intervention"
-            className="w-full h-24 object-cover"
+            heightClass="h-24"
           />
           <span className="flex items-center gap-1 text-[10px] font-bold text-primary px-2 py-1 bg-bg-alt">
             <ImageIcon size={10} />

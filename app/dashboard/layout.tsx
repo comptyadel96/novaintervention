@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { resolveRole } from "@/lib/auth/display";
 import { hasVerifiedContact } from "@/lib/auth/contact";
-import { isProfileComplete } from "@/lib/auth/profile-completion";
+import { needsProfileCompletion } from "@/lib/auth/needs-profile-completion";
 import { profileCompletionBannerText } from "@/lib/auth/profile-completion-messages";
 
 export default async function DashboardLayout({
@@ -24,7 +24,7 @@ export default async function DashboardLayout({
   }
 
   const role = resolveRole(session.user, session.profile);
-  const needsCompletion = !isProfileComplete(session.user, session.profile);
+  const needsCompletion = needsProfileCompletion(session.user, session.profile);
 
   return (
     <div className="flex min-h-screen bg-bg-body">
@@ -46,7 +46,7 @@ export default async function DashboardLayout({
               </p>
             </div>
           )}
-          {!hasVerifiedContact(session.user) && (
+          {!hasVerifiedContact(session.user) && role !== "admin" && (
             <ContactVerificationBanner
               email={session.user.email}
               phoneVerified={session.user.phoneVerified}

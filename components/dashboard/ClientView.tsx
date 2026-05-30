@@ -9,6 +9,7 @@ import { generateInvoicePDF } from "@/lib/pdf/invoice-generator";
 import { useRouter } from "next/navigation";
 import { displayFirstName, displayPhone, resolveRole } from "@/lib/auth/display";
 import { UserAvatar } from "@/components/user/UserAvatar";
+import { MissionPhoto } from "@/components/ui/OptimizedImage";
 import type { AuthUser, Profile, Mission } from "@/types/domain";
 
 export function ClientView({
@@ -129,11 +130,21 @@ export function ClientView({
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div>
                       <p className="text-[10px] font-black uppercase text-text-muted mb-2 tracking-widest text-center">Avant</p>
-                      <img src={m.photo_before || m.photo_url} alt="Avant" className="w-full h-32 object-cover rounded-2xl border border-border" />
+                      <MissionPhoto
+                        src={m.photo_before || m.photo_url}
+                        alt="Avant"
+                        heightClass="h-32"
+                        className="rounded-2xl border border-border"
+                      />
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase text-text-muted mb-2 tracking-widest text-center">Après</p>
-                      <img src={m.photo_after} alt="Après" className="w-full h-32 object-cover rounded-2xl border border-green-200" />
+                      <MissionPhoto
+                        src={m.photo_after}
+                        alt="Après"
+                        heightClass="h-32"
+                        className="rounded-2xl border border-green-200"
+                      />
                     </div>
                   </div>
                   <MissionCommissionBreakdown mission={m} />

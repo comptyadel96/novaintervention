@@ -9,6 +9,8 @@ import type {
   AdminUser,
   ClientStats,
   AccountingPeriod,
+  PartnerApplication,
+  PartnerApplicationStatus,
 } from "@/types/domain";
 import { ApiError } from "@/lib/api/errors";
 
@@ -314,5 +316,27 @@ export const clientAdminApi = {
     if (params?.limit) q.set("limit", String(params.limit));
     const query = q.toString();
     return clientFetch<Mission[]>(`/api/admin/missions${query ? `?${query}` : ""}`);
+  },
+
+  listPartnerApplications(params?: { status?: PartnerApplicationStatus }) {
+    const q = new URLSearchParams();
+    if (params?.status) q.set("status", params.status);
+    const query = q.toString();
+    return clientFetch<{ items: PartnerApplication[] }>(
+      `/api/admin/partner-applications${query ? `?${query}` : ""}`,
+    );
+  },
+
+  updatePartnerApplication(
+    id: string,
+    data: { status: PartnerApplicationStatus; adminNote?: string },
+  ) {
+    return clientFetch<{ application: PartnerApplication }>(
+      `/api/admin/partner-applications/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      },
+    );
   },
 };

@@ -144,7 +144,64 @@ export interface AdminDashboard {
     platformCommissionToday: number;
     commissionRate: number;
   };
-  artisans: { pendingVerification: number };
+  artisans: { pendingVerification: number; pendingApplications?: number };
+}
+
+export type PartnerApplicationStatus =
+  | "pending"
+  | "contacted"
+  | "approved"
+  | "rejected";
+
+export interface PartnerApplication {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string | null;
+  city: string;
+  trade: string;
+  status: PartnerApplicationStatus;
+  adminNote?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreatePartnerApplicationInput {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  city: string;
+}
+
+/** Données publiques pour le simulateur revenus artisan (/devenir-partenaire). */
+export interface ArtisanEarningsEstimate {
+  trade: string;
+  /** Panier moyen net artisan par mission (€) */
+  averageBasket: number;
+  medianBasket?: number;
+  /** Taux commission Nova (0.2 = 20 %) */
+  commissionRate: number;
+  /** Valeur par défaut du slider (missions/semaine) */
+  avgMissionsPerWeek: number;
+  minMissionsPerWeek: number;
+  maxMissionsPerWeek: number;
+  /** Nombre de missions terminées utilisées pour le calcul */
+  sampleSize: number;
+  city?: string;
+  dataSource: "live" | "default";
+  periodLabel?: string;
+  avgWeeklyMissionsPlatform?: number;
+}
+
+export interface ContactMessageInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  message: string;
+  source?: string;
 }
 
 export interface AdminAccountingItem {

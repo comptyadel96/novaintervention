@@ -9,6 +9,7 @@ import { AuthMethodTabs } from "@/components/auth/AuthMethodTabs";
 import { SmsAuthPanel } from "@/components/auth/SmsAuthPanel";
 import { FormField, inputClassName } from "@/components/forms/FormField";
 import { GoogleSignInSection } from "@/components/auth/GoogleSignInSection";
+import { loadGoogleIdentityScript } from "@/lib/auth/google-identity";
 import { authApi } from "@/services/api/auth";
 import { ApiError } from "@/lib/api/errors";
 import { getErrorMessage, isBannedError } from "@/lib/api/errors";
@@ -30,6 +31,10 @@ export default function LoginPage() {
     setFormError(null);
     setFieldErrors({});
   }, [method]);
+
+  useEffect(() => {
+    loadGoogleIdentityScript().catch(() => {});
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

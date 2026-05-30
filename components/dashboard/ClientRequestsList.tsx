@@ -10,11 +10,12 @@ import {
 } from "lucide-react";
 import { clientMissionsApi } from "@/services/api/client";
 import DownloadInvoiceButton from "@/components/dashboard/DownloadInvoiceButton";
-import type { Mission } from "@/types/domain";
 import {
   MISSION_STATUS_LABELS,
   missionStatusClass,
 } from "@/lib/missions/labels";
+import { MissionPhoto } from "@/components/ui/OptimizedImage";
+import type { Mission } from "@/types/domain";
 
 export function ClientRequestsList({ customerId }: { customerId: string }) {
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -100,15 +101,17 @@ export function ClientRequestsList({ customerId }: { customerId: string }) {
               >
                 <h3 className="font-bold text-primary-dk mb-4">{m.title}</h3>
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <img
+                  <MissionPhoto
                     src={m.photo_before || m.photo_url}
                     alt="Avant"
-                    className="w-full h-32 object-cover rounded-2xl"
+                    heightClass="h-32"
+                    className="rounded-2xl"
                   />
-                  <img
+                  <MissionPhoto
                     src={m.photo_after}
                     alt="Après"
-                    className="w-full h-32 object-cover rounded-2xl"
+                    heightClass="h-32"
+                    className="rounded-2xl"
                   />
                 </div>
                 <button

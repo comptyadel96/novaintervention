@@ -15,12 +15,14 @@ import {
   Ban,
 } from "lucide-react";
 import { MissionCommissionBreakdown } from "@/components/missions/MissionCommissionBreakdown";
+import { ContactApplicationDialog } from "@/components/admin/ContactApplicationDialog";
 import { getErrorMessage } from "@/lib/api/errors";
 import type {
   AdminDashboard,
   AdminUser,
   AuthUser,
   Mission,
+  PartnerApplication,
   Profile,
 } from "@/types/domain";
 
@@ -34,19 +36,22 @@ export function AdminView({
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [applications, setApplications] = useState<PartnerApplication[]>([]);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "users" | "artisans" | "missions"
+    "overview" | "applications" | "users" | "artisans" | "missions"
   >("overview");
   const [error, setError] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState("");
+  const [contactApp, setContactApp] = useState<PartnerApplication | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [dash, usersRes, missionsRes] = await Promise.all([
+      const [dash, usersRes, missionsRes, appsRes] = await Promise.all([
         clientAdminApi.getDashboard(),
         clientAdminApi.listUsers({ limit: 100 }),
         clientAdminApi.listMissions({ limit: 50 }),
+        clientAdminApi.listPartnerApplications({ status: "pending" }),
       ]);
       setDashboard(dash);
       setUsers(
@@ -55,6 +60,7 @@ export function AdminView({
           : (usersRes.items ?? []),
       );
       setMissions(missionsRes);
+      setApplications(appsRes.items ?? []);
     } catch (e) {
       setError(getErrorMessage(e, "Impossible de charger les données admin."));
     }
@@ -66,6 +72,21 @@ export function AdminView({
 
   const artisans = users.filter((u) => u.role === "artisan");
   const rate = dashboard?.revenue.commissionRate ?? 0.2;
+
+  const pendingApplications =
+    dashboard?.artisans.pendingApplications ?? applications.length;
+
+  const updateApplicationStatus = async (
+    id: string,
+    status: PartnerApplication["status"],
+  ) => {
+    try {
+      await clientAdminApi.updatePartnerApplication(id, { status });
+      await load();
+    } catch (e) {
+      alert(getErrorMessage(e, "Mise à jour impossible."));
+    }
+  };
 
   const toggleVerification = async (id: string, approved: boolean) => {
     try {
@@ -123,6 +144,7 @@ export function AdminView({
           {(
             [
               ["overview", "Vue d'ensemble"],
+              ["applications", `Candidatures (${pendingApplications})`],
               ["users", "Utilisateurs"],
               ["artisans", "Artisans"],
               ["missions", "Missions"],
@@ -185,12 +207,105 @@ export function AdminView({
               label="Artisans en attente"
               value={dashboard.artisans.pendingVerification}
             />
+            <MiniStat
+              label="Candidatures artisans"
+              value={pendingApplications}
+            />
             <MiniStat label="Terminées" value={dashboard.missions.completed} />
             <MiniStat label="Aujourd'hui GMV" value={`${dashboard.revenue.today} €`} />
           </div>
           <p className="text-text-muted text-sm">
             Connecté : {profile?.email ?? user.email}
           </p>
+        </div>
+      )}
+
+      {activeTab === "applications" && (
+        <div className="bg-white border border-border rounded-4xl p-8 shadow-sm">
+          <h2 className="text-xl font-bold text-primary-dk mb-2">
+            Candidatures partenaires (plomberie)
+          </h2>
+          <p className="text-sm text-text-muted mb-6">
+            Demandes envoyées depuis la page Devenir partenaire. Contactez
+            l&apos;artisan puis validez ou refusez.
+          </p>
+          {applications.length === 0 ? (
+            <p className="text-sm text-text-muted py-8 text-center">
+              Aucune candidature en attente.
+              {error
+                ? " (Vérifiez que le backend expose GET /admin/partner-applications.)"
+                : ""}
+            </p>
+          ) : (
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-border text-xs uppercase text-text-muted">
+                  <th className="pb-3">Nom</th>
+                  <th className="pb-3">Téléphone</th>
+                  <th className="pb-3">Email</th>
+                  <th className="pb-3">Ville</th>
+                  <th className="pb-3">Date</th>
+                  <th className="pb-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((app) => (
+                  <tr
+                    key={app.id}
+                    className="border-b border-border last:border-0"
+                  >
+                    <td className="py-3 font-bold">
+                      {app.firstName} {app.lastName}
+                    </td>
+                    <td className="py-3">
+                      <a
+                        href={`tel:${app.phone.replace(/\s/g, "")}`}
+                        className="text-primary font-medium hover:underline"
+                      >
+                        {app.phone}
+                      </a>
+                    </td>
+                    <td className="py-3 text-text-muted text-sm">
+                      {app.email ?? "—"}
+                    </td>
+                    <td className="py-3 text-text-muted">{app.city}</td>
+                    <td className="py-3 text-text-muted text-xs">
+                      {app.createdAt
+                        ? new Date(app.createdAt).toLocaleDateString("fr-FR")
+                        : "—"}
+                    </td>
+                    <td className="py-3 text-right space-x-2 whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => setContactApp(app)}
+                        className="btn btn-sm btn-outline"
+                      >
+                        Contacter
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateApplicationStatus(app.id, "approved")
+                        }
+                        className="btn btn-sm btn-primary"
+                      >
+                        <CheckCircle2 size={14} /> Valider
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateApplicationStatus(app.id, "rejected")
+                        }
+                        className="btn btn-sm btn-outline text-red-600"
+                      >
+                        <XCircle size={14} /> Refuser
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 
@@ -283,6 +398,17 @@ export function AdminView({
           ))}
         </div>
       )}
+
+      <ContactApplicationDialog
+        application={contactApp}
+        open={contactApp != null}
+        onClose={() => setContactApp(null)}
+        onContacted={(app) => {
+          if (app.status === "pending") {
+            void updateApplicationStatus(app.id, "contacted");
+          }
+        }}
+      />
     </div>
   );
 }

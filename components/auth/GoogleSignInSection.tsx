@@ -1,18 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Script from "next/script";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/services/api/auth";
 import { getErrorMessage, isBannedError } from "@/lib/api/errors";
+import { GoogleIcon } from "@/components/auth/GoogleIcon";
+import { loadGoogleIdentityScript } from "@/lib/auth/google-identity";
 import type { UserRole } from "@/types/domain";
 
-const GSI_SCRIPT = "https://accounts.google.com/gsi/client";
+const ENV_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim();
 
 type Props = {
-  /** Inscription : rôle envoyé au backend (`client` ou `artisan`). */
   signupRole?: UserRole;
-  /** Texte du bouton Google : inscription vs connexion. */
   variant?: "signin" | "signup";
   disabled?: boolean;
   onError?: (message: string) => void;
@@ -25,22 +30,65 @@ export function GoogleSignInSection({
   onError,
 }: Props) {
   const router = useRouter();
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<{
-    enabled: boolean;
-    clientId?: string;
-  } | null>(null);
-  const [scriptReady, setScriptReady] = useState(false);
+  const gsiHostRef = useRef<HTMLDivElement>(null);
+  const [clientId, setClientId] = useState<string | undefined>(ENV_CLIENT_ID);
+  const [configured, setConfigured] = useState(Boolean(ENV_CLIENT_ID));
+  const [gsiReady, setGsiReady] = useState(false);
+  const [gsiHostReady, setGsiHostReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const renderedRef = useRef(false);
+  const [statusLoaded, setStatusLoaded] = useState(false);
+
+  const label =
+    variant === "signup" ? "S'inscrire avec Google" : "Continuer avec Google";
+
+  const gsiHostCallback = useCallback((node: HTMLDivElement | null) => {
+    gsiHostRef.current = node;
+    setGsiHostReady(Boolean(node));
+  }, []);
 
   useEffect(() => {
     authApi
       .getGoogleStatus()
-      .then(setStatus)
-      .catch(() => setStatus({ enabled: false }));
+      .then((status) => {
+        if (status.enabled && status.clientId) {
+          setConfigured(true);
+          setClientId(status.clientId);
+        } else if (!ENV_CLIENT_ID) {
+          setConfigured(false);
+          setClientId(undefined);
+        }
+      })
+      .catch(() => {
+        if (!ENV_CLIENT_ID) {
+          setConfigured(false);
+          setClientId(undefined);
+        }
+      })
+      .finally(() => setStatusLoaded(true));
   }, []);
+
+  useEffect(() => {
+    if (!configured || !clientId) return;
+
+    let cancelled = false;
+
+    loadGoogleIdentityScript()
+      .then(() => {
+        if (!cancelled) setGsiReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLocalError(
+            "Impossible de charger Google. Vérifiez votre connexion et réessayez.",
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [configured, clientId]);
 
   const handleCredential = useCallback(
     async (response: GoogleCredentialResponse) => {
@@ -71,78 +119,126 @@ export function GoogleSignInSection({
     [signupRole, router, onError],
   );
 
-  useEffect(() => {
-    if (
-      !status?.enabled ||
-      !status.clientId ||
-      !scriptReady ||
-      !buttonRef.current ||
-      disabled ||
-      renderedRef.current
-    ) {
-      return;
-    }
+  const renderGsiButton = useCallback(() => {
+    const host = gsiHostRef.current;
+    if (!host || !clientId) return;
 
     const google = window.google;
     if (!google?.accounts?.id) return;
 
-    const width = buttonRef.current.offsetWidth || 320;
+    host.innerHTML = "";
 
     google.accounts.id.initialize({
-      client_id: status.clientId,
+      client_id: clientId,
       callback: handleCredential,
       cancel_on_tap_outside: true,
+      ux_mode: "popup",
+      locale: "fr",
     });
 
-    google.accounts.id.renderButton(buttonRef.current, {
+    const width = host.offsetWidth || host.parentElement?.offsetWidth || 320;
+
+    google.accounts.id.renderButton(host, {
       type: "standard",
       theme: "outline",
       size: "large",
       text: variant === "signup" ? "signup_with" : "continue_with",
-      width: Math.min(Math.max(width, 200), 400),
+      width: Math.min(Math.max(width, 240), 400),
       locale: "fr",
     });
+  }, [clientId, variant, handleCredential]);
 
-    renderedRef.current = true;
-  }, [status, scriptReady, disabled, variant, handleCredential]);
+  useLayoutEffect(() => {
+    if (
+      !configured ||
+      !clientId ||
+      !gsiReady ||
+      !gsiHostReady ||
+      disabled ||
+      loading
+    ) {
+      return;
+    }
 
-  if (status === null) {
-    return (
-      <div
-        className="h-12 rounded-xl bg-bg-alt animate-pulse mb-2"
-        aria-hidden
-      />
-    );
-  }
+    renderGsiButton();
 
-  if (!status.enabled || !status.clientId) {
-    return null;
-  }
+    const host = gsiHostRef.current;
+    if (!host) return;
+
+    const observer = new ResizeObserver(() => {
+      renderGsiButton();
+    });
+    observer.observe(host);
+
+    return () => {
+      observer.disconnect();
+      host.innerHTML = "";
+    };
+  }, [
+    configured,
+    clientId,
+    gsiReady,
+    gsiHostReady,
+    disabled,
+    loading,
+    renderGsiButton,
+  ]);
+
+  const interactive =
+    configured && clientId && gsiReady && !disabled && !loading;
+  const showLoadingOverlay =
+    loading || (!statusLoaded && !ENV_CLIENT_ID) || (configured && !gsiReady);
 
   return (
-    <div className="space-y-3">
-      <Script
-        src={GSI_SCRIPT}
-        strategy="lazyOnload"
-        onLoad={() => setScriptReady(true)}
-      />
-
+    <div className="space-y-3 w-full">
       {localError && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
           {localError}
         </p>
       )}
 
-      <div
-        className={`relative flex justify-center min-h-[44px] ${
-          disabled || loading ? "opacity-50 pointer-events-none" : ""
-        }`}
-      >
-        <div ref={buttonRef} className="w-full flex justify-center" />
-        {loading && (
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-text-muted bg-white/80 rounded-xl">
-            Connexion…
-          </span>
+      {!configured && statusLoaded && (
+        <p className="text-xs text-text-muted text-center">
+          Connexion Google non configurée sur ce serveur.
+        </p>
+      )}
+
+      <div className="relative w-full">
+        {/* Couche visuelle — toujours visible, donne la hauteur au conteneur */}
+        <div
+          className={`flex w-full items-center justify-center gap-3 rounded-xl border border-[#dadce0] bg-white px-4 py-2.5 text-sm font-medium text-[#3c4043] shadow-sm select-none min-h-[44px] ${
+            interactive ? "" : "opacity-80"
+          }`}
+          aria-hidden={interactive ? undefined : "true"}
+        >
+          <GoogleIcon size={20} />
+          <span>{label}</span>
+        </div>
+
+        {/* Iframe Google cliquable par-dessus */}
+        {configured && clientId && (
+          <div
+            ref={gsiHostCallback}
+            className={`absolute inset-0 z-10 overflow-hidden ${
+              interactive
+                ? "opacity-[0.01] cursor-pointer"
+                : "pointer-events-none opacity-0"
+            }`}
+            aria-label={label}
+          />
+        )}
+
+        {showLoadingOverlay && (
+          <div
+            className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-white/80 text-xs font-bold text-text-muted pointer-events-none"
+            aria-live="polite"
+          >
+            {loading
+              ? "Connexion…"
+              : !statusLoaded
+                ? "Chargement…"
+                : "Chargement Google…"}
+          </div>
         )}
       </div>
     </div>

@@ -11,6 +11,7 @@ import {
   Truck,
 } from "lucide-react";
 import type { Mission } from "@/types/domain";
+import { MissionPhoto, OptimizedImage } from "@/components/ui/OptimizedImage";
 import {
   clientMissionsApi,
   clientUploadsApi,
@@ -119,10 +120,11 @@ export function ArtisanMissionCard({ mission, onUpdated }: Props) {
             <p className="text-[10px] font-black uppercase text-text-muted mb-2 tracking-widest">
               Avant
             </p>
-            <img
+            <MissionPhoto
               src={mission.photo_before || mission.photo_url}
               alt="Avant"
-              className="w-full h-28 object-cover rounded-2xl border border-border"
+              heightClass="h-28"
+              className="rounded-2xl border border-border"
             />
           </div>
           {mission.photo_after && (
@@ -130,10 +132,11 @@ export function ArtisanMissionCard({ mission, onUpdated }: Props) {
               <p className="text-[10px] font-black uppercase text-text-muted mb-2 tracking-widest">
                 Après
               </p>
-              <img
+              <MissionPhoto
                 src={mission.photo_after}
                 alt="Après"
-                className="w-full h-28 object-cover rounded-2xl border border-green-200"
+                heightClass="h-28"
+                className="rounded-2xl border border-green-200"
               />
             </div>
           )}
@@ -228,10 +231,12 @@ export function ArtisanMissionCard({ mission, onUpdated }: Props) {
               />
             </div>
             {afterPreview && (
-              <img
+              <OptimizedImage
                 src={afterPreview}
                 alt="Aperçu après"
-                className="h-24 rounded-xl object-cover"
+                width={160}
+                height={96}
+                className="h-24 w-auto rounded-xl object-cover"
               />
             )}
             <button

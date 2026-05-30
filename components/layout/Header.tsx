@@ -131,9 +131,14 @@ export function Header() {
               </button>
             </div>
           ) : (
-            <Link href="/login" className="btn btn-outline btn-sm">
-              Connexion
-            </Link>
+            <>
+              <Link href="/devenir-partenaire" className="btn btn-outline btn-sm">
+                Devenir partenaire
+              </Link>
+              <Link href="/login" className="btn btn-outline btn-sm">
+                Connexion
+              </Link>
+            </>
           )}
           <Link href="/demander" className="btn btn-primary btn-sm">
             Demander une intervention
@@ -255,13 +260,22 @@ export function Header() {
                 </button>
               </>
             ) : (
-              <Link
-                href="/login"
-                onClick={() => setMenuOpen(false)}
-                className="btn btn-outline btn-sm"
-              >
-                Connexion
-              </Link>
+              <>
+                <Link
+                  href="/devenir-partenaire"
+                  onClick={() => setMenuOpen(false)}
+                  className="btn btn-outline btn-sm"
+                >
+                  Devenir partenaire
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="btn btn-outline btn-sm"
+                >
+                  Connexion
+                </Link>
+              </>
             )}
             <Link
               href="/demander"

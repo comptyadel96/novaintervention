@@ -272,10 +272,10 @@ export default function ProfileForm({
           error={fieldErrors.phone}
           hint={
             phoneKnown
-              ? "Enregistré à l'inscription — modifiable si besoin"
+              ? "Visible et modifiable — enregistré à l'inscription ou sur cette page"
               : "10 chiffres minimum (ex. 06 12 34 56 78)"
           }
-          required={!phoneKnown}
+          required
         >
           <input
             id="profile-phone"

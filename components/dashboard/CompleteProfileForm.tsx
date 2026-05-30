@@ -27,7 +27,7 @@ export function CompleteProfileForm({
 }) {
   const router = useRouter();
   const missing = missingProfileFields(user, profile);
-  const phoneAlreadySet = hasProfilePhone(user, profile);
+  const phoneFromRegistration = hasProfilePhone(user, profile);
   const googleAvatar = resolveAvatarUrl(user, profile);
 
   const [phone, setPhone] = useState(() => resolveProfilePhone(user, profile));
@@ -51,10 +51,8 @@ export function CompleteProfileForm({
     const errors: Partial<Record<"phone" | "location" | "address", string>> =
       {};
 
-    if (!phoneAlreadySet) {
-      const phoneCheck = validatePhone(phone);
-      if (!phoneCheck.valid) errors.phone = phoneCheck.message!;
-    }
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) errors.phone = phoneCheck.message!;
 
     if (!address.trim()) {
       errors.address = "Indiquez votre adresse (suggestion Google ou GPS).";
@@ -73,7 +71,7 @@ export function CompleteProfileForm({
     setLoading(true);
     try {
       await clientProfilesApi.updateMe({
-        phone: phoneAlreadySet ? resolveProfilePhone(user, profile) : phone,
+        phone: phone.trim(),
         city,
         address: address.trim(),
         latitude: latitude!,
@@ -107,19 +105,10 @@ export function CompleteProfileForm({
       <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 flex gap-3 text-sm text-amber-950">
         <AlertCircle className="shrink-0 mt-0.5" size={18} />
         <p>
-          {phoneAlreadySet ? (
-            <>
-              Votre <strong>téléphone</strong> est déjà enregistré (inscription).
-              Il reste à indiquer votre <strong>adresse</strong> et votre{" "}
-              <strong>position GPS</strong> (Google Maps).
-            </>
-          ) : (
-            <>
-              Indiquez votre <strong>téléphone</strong> et votre{" "}
-              <strong>adresse</strong> (via GPS Google Maps). Sans cela, le site
-              reste limité.
-            </>
-          )}
+          Vérifiez votre <strong>numéro de téléphone</strong> (visible ci-dessous)
+          et indiquez votre <strong>adresse</strong> avec{" "}
+          <strong>position GPS</strong> pour recevoir ou proposer des
+          interventions.
         </p>
       </div>
 
@@ -134,11 +123,11 @@ export function CompleteProfileForm({
         htmlFor="complete-phone"
         error={fieldErrors.phone}
         hint={
-          phoneAlreadySet
-            ? "Déjà fourni à l'inscription — modifiable dans Mon profil"
-            : "10 chiffres minimum — joignable par l'artisan"
+          phoneFromRegistration && phone
+            ? "Prérempli depuis votre inscription — vous pouvez le modifier"
+            : "10 chiffres minimum — joignable par l'artisan ou le client"
         }
-        required={!phoneAlreadySet}
+        required
       >
         <div className="relative">
           <Phone
@@ -150,11 +139,9 @@ export function CompleteProfileForm({
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className={`${inputClassName(!!fieldErrors.phone)} pl-10${phoneAlreadySet ? " bg-bg-alt text-text-muted" : ""}`}
+            className={`${inputClassName(!!fieldErrors.phone)} pl-10`}
             placeholder="06 12 34 56 78"
             autoComplete="tel"
-            readOnly={phoneAlreadySet}
-            aria-readonly={phoneAlreadySet}
           />
         </div>
       </FormField>
