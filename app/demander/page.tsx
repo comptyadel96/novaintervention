@@ -102,7 +102,6 @@ export default function DemanderPage() {
     if (!preview || !file) return;
     setIsLoading(true);
     setAnalysisError(null);
-    setAnalysisWarning(null);
 
     try {
       let imageUrl = uploadedPhotoUrl ?? undefined;
