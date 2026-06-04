@@ -1,11 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/cookies";
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from "@/lib/auth/cookies";
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const hasAccess = Boolean(request.cookies.get(ACCESS_TOKEN_COOKIE)?.value);
+  const hasRefresh = Boolean(request.cookies.get(REFRESH_TOKEN_COOKIE)?.value);
+  const hasSession = hasAccess || hasRefresh;
   const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
 
-  if (isDashboard && !token) {
+  if (isDashboard && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

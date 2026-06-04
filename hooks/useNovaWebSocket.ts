@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getWsUrl } from "@/lib/api/config";
+import { tryRefreshSession } from "@/lib/api/bff-client";
 import type { Mission } from "@/types/domain";
 
 type WsHandler = (payload: unknown) => void;
@@ -16,7 +17,12 @@ type UseNovaWebSocketOptions = {
 
 async function fetchWsToken(): Promise<string | null> {
   try {
-    const res = await fetch("/api/auth/ws-token", { credentials: "include" });
+    let res = await fetch("/api/auth/ws-token", { credentials: "include" });
+    if (res.status === 401) {
+      const refreshed = await tryRefreshSession();
+      if (!refreshed) return null;
+      res = await fetch("/api/auth/ws-token", { credentials: "include" });
+    }
     if (!res.ok) return null;
     const data = await res.json();
     return (data as { token?: string }).token ?? null;
@@ -92,6 +98,14 @@ export function useNovaWebSocket(options: UseNovaWebSocketOptions = {}) {
     ws.onclose = () => {
       setConnected(false);
       if (pingRef.current) clearInterval(pingRef.current);
+      window.setTimeout(() => {
+        if (!enabled) return;
+        void (async () => {
+          if (await tryRefreshSession()) {
+            connect();
+          }
+        })();
+      }, 2500);
     };
   }, [enabled, disconnect]);
 

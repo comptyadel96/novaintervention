@@ -6,9 +6,10 @@ import {
   REFRESH_TOKEN_COOKIE,
   AUTH_COOKIE_OPTIONS,
 } from "@/lib/auth/cookies";
-
-const ACCESS_MAX_AGE = 60 * 15;
-const REFRESH_MAX_AGE = 60 * 60 * 24 * 7;
+import {
+  getAccessTokenMaxAgeSeconds,
+  getRefreshTokenMaxAgeSeconds,
+} from "@/lib/auth/token-max-age";
 
 type RefreshResponse = {
   accessToken: string;
@@ -28,13 +29,13 @@ export async function refreshAccessToken(): Promise<string | null> {
 
     cookieStore.set(ACCESS_TOKEN_COOKIE, data.accessToken, {
       ...AUTH_COOKIE_OPTIONS,
-      maxAge: ACCESS_MAX_AGE,
+      maxAge: getAccessTokenMaxAgeSeconds(),
     });
 
     if (data.refreshToken) {
       cookieStore.set(REFRESH_TOKEN_COOKIE, data.refreshToken, {
         ...AUTH_COOKIE_OPTIONS,
-        maxAge: REFRESH_MAX_AGE,
+        maxAge: getRefreshTokenMaxAgeSeconds(),
       });
     }
 

@@ -1,7 +1,7 @@
 import type { AnalyzePhotoMeta, AnalyzePhotoResult } from "@/types";
 import { mapAnalyzePhotoResult } from "@/lib/ai/map-analysis";
 import { parseAnalyzePhotoMeta } from "@/lib/ai/analysis-meta";
-import { ApiError } from "@/lib/api/errors";
+import { bffFetch } from "@/lib/api/bff-client";
 
 export type AnalyzePhotoInput = {
   /** Data URL base64 (jpeg/png) */
@@ -26,28 +26,17 @@ export async function analyzePhoto(
     throw new Error("Aucune image à analyser.");
   }
 
-  const response = await fetch("/api/ai/analyze-photo", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      image: input.image,
-      imageUrl: input.imageUrl,
-      context: input.context,
-    }),
-  });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    const body = payload as { message?: string; code?: string };
-    throw new ApiError(
-      body.message ??
-        "L'analyse photo par IA a échoué. Vérifiez que le backend et OpenAI sont configurés.",
-      response.status,
-      body.code,
-    );
-  }
+  const payload = await bffFetch<Record<string, unknown>>(
+    "/api/ai/analyze-photo",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        image: input.image,
+        imageUrl: input.imageUrl,
+        context: input.context,
+      }),
+    },
+  );
 
   const analysis = mapAnalyzePhotoResult(payload);
   const meta = parseAnalyzePhotoMeta(payload);

@@ -12,70 +12,22 @@ import type {
   PartnerApplication,
   PartnerApplicationStatus,
 } from "@/types/domain";
-import { ApiError } from "@/lib/api/errors";
-
-async function tryRefreshSession(): Promise<boolean> {
-  const res = await fetch("/api/auth/refresh", {
-    method: "POST",
-    credentials: "include",
-  });
-  return res.ok;
-}
-
-async function clientFetch<T>(
-  path: string,
-  options: RequestInit = {},
-  retried = false,
-): Promise<T> {
-  const response = await fetch(path, {
-    ...options,
-    credentials: "include",
-    headers: {
-      ...(options.body instanceof FormData
-        ? {}
-        : { "Content-Type": "application/json" }),
-      ...options.headers,
-    },
-  });
-
-  if (response.status === 401 && !retried) {
-    const refreshed = await tryRefreshSession();
-    if (refreshed) {
-      return clientFetch<T>(path, options, true);
-    }
-  }
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new ApiError(
-      (payload as { message?: string }).message ??
-        "Une erreur est survenue.",
-      response.status,
-      (payload as { code?: string }).code,
-    );
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
-}
+import { bffFetch } from "@/lib/api/bff-client";
 
 export const clientProfilesApi = {
   list() {
-    return clientFetch<Profile[]>("/api/profiles");
+    return bffFetch<Profile[]>("/api/profiles");
   },
 
   updateMe(data: UpdateProfileInput) {
-    return clientFetch<Profile>("/api/profiles/me", {
+    return bffFetch<Profile>("/api/profiles/me", {
       method: "PATCH",
       body: JSON.stringify(data),
     });
   },
 
   setVerification(profileId: string, status: "approved" | "rejected") {
-    return clientFetch<Profile>(`/api/profiles/${profileId}/verification`, {
+    return bffFetch<Profile>(`/api/profiles/${profileId}/verification`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
     });
@@ -84,7 +36,7 @@ export const clientProfilesApi = {
   uploadAvatar(file: File) {
     const formData = new FormData();
     formData.append("file", file);
-    return clientFetch<Profile>("/api/profiles/me/avatar", {
+    return bffFetch<Profile>("/api/profiles/me/avatar", {
       method: "POST",
       body: formData,
     });
@@ -136,37 +88,37 @@ export const clientMissionsApi = {
       limit?: number;
     } = {},
   ) {
-    return clientFetch<Mission[]>(`/api/missions${missionQuery(filters)}`);
+    return bffFetch<Mission[]>(`/api/missions${missionQuery(filters)}`);
   },
 
   create(data: CreateMissionInput & Record<string, unknown>) {
-    return clientFetch<Mission>("/api/missions", {
+    return bffFetch<Mission>("/api/missions", {
       method: "POST",
       body: JSON.stringify(data),
     });
   },
 
   update(id: string, data: Partial<Mission>) {
-    return clientFetch<Mission>(`/api/missions/${id}`, {
+    return bffFetch<Mission>(`/api/missions/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
   },
 
   accept(id: string) {
-    return clientFetch<Mission>(`/api/missions/${id}/accept`, {
+    return bffFetch<Mission>(`/api/missions/${id}/accept`, {
       method: "POST",
     });
   },
 
   start(id: string) {
-    return clientFetch<Mission>(`/api/missions/${id}/start`, {
+    return bffFetch<Mission>(`/api/missions/${id}/start`, {
       method: "POST",
     });
   },
 
   enRoute(id: string) {
-    return clientFetch<Mission>(`/api/missions/${id}/en-route`, {
+    return bffFetch<Mission>(`/api/missions/${id}/en-route`, {
       method: "POST",
     });
   },
@@ -175,20 +127,20 @@ export const clientMissionsApi = {
     id: string,
     payload: { photoAfterUrl: string; priceFinal?: number },
   ) {
-    return clientFetch<Mission>(`/api/missions/${id}/complete-work`, {
+    return bffFetch<Mission>(`/api/missions/${id}/complete-work`, {
       method: "POST",
       body: JSON.stringify(payload),
     });
   },
 
   confirmClient(id: string) {
-    return clientFetch<Mission>(`/api/missions/${id}/confirm-client`, {
+    return bffFetch<Mission>(`/api/missions/${id}/confirm-client`, {
       method: "POST",
     });
   },
 
   confirmArtisan(id: string) {
-    return clientFetch<Mission>(`/api/missions/${id}/confirm-artisan`, {
+    return bffFetch<Mission>(`/api/missions/${id}/confirm-artisan`, {
       method: "POST",
     });
   },
@@ -202,7 +154,7 @@ export const clientUploadsApi = {
   uploadInterventionPhoto(file: File) {
     const formData = new FormData();
     formData.append("file", file);
-    return clientFetch<{ url: string; publicId?: string }>(
+    return bffFetch<{ url: string; publicId?: string }>(
       "/api/uploads/interventions",
       {
         method: "POST",
@@ -229,7 +181,7 @@ export const clientNotificationsApi = {
     if (params?.page) q.set("page", String(params.page));
     if (params?.limit) q.set("limit", String(params.limit));
     const query = q.toString();
-    return clientFetch<{
+    return bffFetch<{
       items: AppNotification[];
       unreadCount: number;
       total: number;
@@ -237,19 +189,19 @@ export const clientNotificationsApi = {
   },
 
   unreadCount() {
-    return clientFetch<{ unreadCount: number }>(
+    return bffFetch<{ unreadCount: number }>(
       "/api/notifications/unread-count",
     );
   },
 
   markRead(id: string) {
-    return clientFetch<void>(`/api/notifications/${id}/read`, {
+    return bffFetch<void>(`/api/notifications/${id}/read`, {
       method: "PATCH",
     });
   },
 
   markAllRead() {
-    return clientFetch<void>("/api/notifications/read-all", {
+    return bffFetch<void>("/api/notifications/read-all", {
       method: "PATCH",
     });
   },
@@ -257,13 +209,13 @@ export const clientNotificationsApi = {
 
 export const clientClientsApi = {
   getStats() {
-    return clientFetch<ClientStats>("/api/clients/me/stats");
+    return bffFetch<ClientStats>("/api/clients/me/stats");
   },
 };
 
 export const clientAdminApi = {
   getDashboard() {
-    return clientFetch<AdminDashboard>("/api/admin/dashboard");
+    return bffFetch<AdminDashboard>("/api/admin/dashboard");
   },
 
   getAccounting(params: {
@@ -274,7 +226,7 @@ export const clientAdminApi = {
     const q = new URLSearchParams({ period: params.period });
     if (params.from) q.set("from", params.from);
     if (params.to) q.set("to", params.to);
-    return clientFetch<AdminAccounting>(`/api/admin/accounting?${q}`);
+    return bffFetch<AdminAccounting>(`/api/admin/accounting?${q}`);
   },
 
   listUsers(params?: {
@@ -291,20 +243,20 @@ export const clientAdminApi = {
     if (params?.page) q.set("page", String(params.page));
     if (params?.limit) q.set("limit", String(params.limit));
     const query = q.toString();
-    return clientFetch<{ items: AdminUser[]; total?: number }>(
+    return bffFetch<{ items: AdminUser[]; total?: number }>(
       `/api/admin/users${query ? `?${query}` : ""}`,
     );
   },
 
   banUser(userId: string, reason: string) {
-    return clientFetch<void>(`/api/admin/users/${userId}/ban`, {
+    return bffFetch<void>(`/api/admin/users/${userId}/ban`, {
       method: "PATCH",
       body: JSON.stringify({ reason }),
     });
   },
 
   unbanUser(userId: string) {
-    return clientFetch<void>(`/api/admin/users/${userId}/unban`, {
+    return bffFetch<void>(`/api/admin/users/${userId}/unban`, {
       method: "PATCH",
     });
   },
@@ -315,14 +267,14 @@ export const clientAdminApi = {
     if (params?.page) q.set("page", String(params.page));
     if (params?.limit) q.set("limit", String(params.limit));
     const query = q.toString();
-    return clientFetch<Mission[]>(`/api/admin/missions${query ? `?${query}` : ""}`);
+    return bffFetch<Mission[]>(`/api/admin/missions${query ? `?${query}` : ""}`);
   },
 
   listPartnerApplications(params?: { status?: PartnerApplicationStatus }) {
     const q = new URLSearchParams();
     if (params?.status) q.set("status", params.status);
     const query = q.toString();
-    return clientFetch<{ items: PartnerApplication[] }>(
+    return bffFetch<{ items: PartnerApplication[] }>(
       `/api/admin/partner-applications${query ? `?${query}` : ""}`,
     );
   },
@@ -331,7 +283,7 @@ export const clientAdminApi = {
     id: string,
     data: { status: PartnerApplicationStatus; adminNote?: string },
   ) {
-    return clientFetch<{ application: PartnerApplication }>(
+    return bffFetch<{ application: PartnerApplication }>(
       `/api/admin/partner-applications/${id}`,
       {
         method: "PATCH",

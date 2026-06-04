@@ -1,6 +1,8 @@
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { ContactVerificationBanner } from "@/components/dashboard/ContactVerificationBanner";
 import { ProfileCompletionRedirect } from "@/components/dashboard/ProfileCompletionRedirect";
+import { SessionKeeper } from "@/components/auth/SessionKeeper";
+import { getSessionRefreshIntervalMs } from "@/lib/auth/token-max-age";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { resolveRole } from "@/lib/auth/display";
@@ -28,6 +30,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-bg-body">
+      <SessionKeeper refreshIntervalMs={getSessionRefreshIntervalMs()} />
       <ProfileCompletionRedirect needsCompletion={needsCompletion} />
       <DashboardSidebar role={role} />
       <main className="flex-1 ml-64 p-8">
