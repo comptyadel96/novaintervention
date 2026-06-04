@@ -1,0 +1,219 @@
+/* Nova Intervention — styles emails transactionnels (vérification inscription, réinitialisation mot de passe) */
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100% !important;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  background-color: #f4f6fa;
+}
+
+table {
+  border-collapse: collapse;
+  mso-table-lspace: 0pt;
+  mso-table-rspace: 0pt;
+}
+
+img {
+  border: 0;
+  height: auto;
+  line-height: 100%;
+  outline: none;
+  text-decoration: none;
+  -ms-interpolation-mode: bicubic;
+}
+
+.email-wrapper {
+  width: 100%;
+  background-color: #f4f6fa;
+  padding: 32px 16px;
+}
+
+.email-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(12, 76, 147, 0.12);
+  box-shadow: 0 4px 24px rgba(11, 58, 107, 0.08);
+}
+
+.email-header {
+  background: linear-gradient(135deg, #0c4c93 0%, #0b3a6b 100%);
+  padding: 28px 32px;
+  text-align: center;
+}
+
+.email-logo {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.email-logo-accent {
+  color: #7eb8ff;
+}
+
+.email-tagline {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 8px 0 0;
+}
+
+.email-body {
+  padding: 36px 32px 28px;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #333333;
+}
+
+.email-title {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0b3a6b;
+  margin: 0 0 16px;
+  line-height: 1.25;
+}
+
+.email-text {
+  margin: 0 0 16px;
+  color: #333333;
+}
+
+.email-text-muted {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #5b6b80;
+  line-height: 1.6;
+}
+
+.email-highlight {
+  background-color: #f4f6fa;
+  border-left: 4px solid #0c4c93;
+  padding: 16px 18px;
+  margin: 0 0 24px;
+  border-radius: 0 8px 8px 0;
+  font-size: 14px;
+  color: #0b3a6b;
+}
+
+.email-cta-wrap {
+  text-align: center;
+  margin: 28px 0 24px;
+}
+
+.email-button {
+  display: inline-block;
+  padding: 16px 32px;
+  background-color: #0c4c93;
+  background: linear-gradient(180deg, #1e60aa 0%, #0c4c93 100%);
+  color: #ffffff !important;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 12px;
+  border: none;
+  mso-padding-alt: 0;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.email-button:hover {
+  background-color: #0b3a6b;
+}
+
+.email-link-fallback {
+  font-size: 13px;
+  color: #5b6b80;
+  word-break: break-all;
+  margin: 0 0 8px;
+}
+
+.email-link-fallback a {
+  color: #0c4c93;
+  text-decoration: underline;
+}
+
+.email-divider {
+  height: 1px;
+  background-color: rgba(12, 76, 147, 0.1);
+  margin: 24px 0;
+  border: none;
+}
+
+.email-note {
+  font-size: 13px;
+  color: #5b6b80;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.email-footer {
+  padding: 24px 32px 28px;
+  background-color: #f4f6fa;
+  text-align: center;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #5b6b80;
+}
+
+.email-footer-brand {
+  font-weight: 700;
+  color: #0b3a6b;
+  margin: 0 0 6px;
+}
+
+.email-footer a {
+  color: #0c4c93;
+  text-decoration: none;
+}
+
+.email-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: rgba(12, 76, 147, 0.08);
+  color: #0c4c93;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+@media only screen and (max-width: 620px) {
+  .email-wrapper {
+    padding: 16px 12px !important;
+  }
+
+  .email-body,
+  .email-header,
+  .email-footer {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .email-title {
+    font-size: 20px !important;
+  }
+
+  .email-button {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}

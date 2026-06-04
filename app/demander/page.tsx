@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { analyzePhoto } from "@/services/api/vision";
 import { fetchAiPhotoStatus } from "@/services/api/ai-photo";
-import type { AnalyzePhotoMeta, AnalyzePhotoResult } from "@/types";
+import type { AnalyzePhotoResult } from "@/types";
 import { formatAiInterventionType } from "@/lib/ai/intervention-labels";
 import { clientMissionsApi, clientUploadsApi } from "@/services/api/client";
 import { authApi } from "@/services/api/auth";
@@ -20,7 +20,7 @@ import { isProfileComplete } from "@/lib/auth/profile-completion";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 
-const steps = ["Photo IA", "Estimation", "Coordonnées"];
+const steps = ["Photo", "Estimation", "Coordonnées"];
 
 export default function DemanderPage() {
   const router = useRouter();
@@ -34,10 +34,6 @@ export default function DemanderPage() {
   const [extraDesc, setExtraDesc] = useState("");
   const [photoContext, setPhotoContext] = useState("");
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
-  const [analysisMeta, setAnalysisMeta] = useState<AnalyzePhotoMeta | null>(
-    null,
-  );
-  const [analysisWarning, setAnalysisWarning] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [aiStatus, setAiStatus] = useState<{
     enabled: boolean;
@@ -93,8 +89,6 @@ export default function DemanderPage() {
       setFile(f);
       setUploadedPhotoUrl(null);
       setIaResult(null);
-      setAnalysisMeta(null);
-      setAnalysisWarning(null);
       setAnalysisError(null);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -123,22 +117,20 @@ export default function DemanderPage() {
         }
       }
 
-      const { analysis, meta, warning } = await analyzePhoto({
+      const { analysis } = await analyzePhoto({
         imageUrl,
         image: imageUrl ? undefined : preview,
         context: photoContext.trim() || undefined,
       });
 
       setIaResult(analysis);
-      setAnalysisMeta(meta);
-      setAnalysisWarning(warning ?? null);
       setStep(1);
     } catch (err) {
       console.error(err);
       setAnalysisError(
         getErrorMessage(
           err,
-          "Analyse impossible. Vérifiez que le backend est démarré et OpenAI configuré.",
+          "Impossible d'analyser la photo pour le moment. Réessayez ou choisissez une autre image.",
         ),
       );
     } finally {
@@ -240,14 +232,14 @@ export default function DemanderPage() {
               <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Étape 1 sur 3</span>
               <h2 className="text-2xl font-bold text-primary-dk mb-4">Décrivez l'urgence</h2>
               <p className="text-sm text-text-muted mb-6 leading-relaxed">
-                Nova envoie votre photo au backend, qui appelle OpenAI Vision pour
-                estimer le type d&apos;intervention, l&apos;urgence et une fourchette
-                de prix (pas un texte fixe).
+                Ajoutez une photo de la zone concernée : notre assistant analyse
+                l&apos;image pour estimer le type d&apos;intervention, le niveau
+                d&apos;urgence et une fourchette de prix indicative.
               </p>
 
               <div className="mb-4">
                 <label className="block text-sm font-bold text-primary-dk mb-2">
-                  Décrivez le problème (optionnel, aide l&apos;IA)
+                  Décrivez le problème (optionnel)
                 </label>
                 <textarea
                   value={photoContext}
@@ -260,14 +252,13 @@ export default function DemanderPage() {
 
               {aiStatus?.enabled === false && (
                 <div
-                  className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
+                  className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
                   role="status"
                 >
-                  <p className="font-bold">IA indisponible</p>
+                  <p className="font-bold">Analyse photo indisponible</p>
                   <p className="mt-1">
-                    L&apos;analyse photo n&apos;est pas activée sur le serveur
-                    (configurez <code className="text-xs">OPENAI_API_KEY</code>{" "}
-                    côté backend).
+                    Ce service est momentanément indisponible. Réessayez plus tard
+                    ou contactez-nous si le problème persiste.
                   </p>
                 </div>
               )}
@@ -312,10 +303,10 @@ export default function DemanderPage() {
                 {isLoading ? (
                   <>
                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Analyse par l'IA en cours...
+                    Analyse en cours…
                   </>
                 ) : (
-                  "Lancer l'analyse IA"
+                  "Analyser ma photo"
                 )}
               </button>
             </div>
@@ -325,24 +316,7 @@ export default function DemanderPage() {
           {step === 1 && iaResult && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Étape 2 sur 3</span>
-              <h2 className="text-2xl font-bold text-primary-dk mb-6">Bilan de l'Intelligence Artificielle</h2>
-
-              {analysisMeta?.source === "mock" && (
-                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-                  <p className="font-bold">Mode démonstration</p>
-                  <p className="mt-1">
-                    {analysisWarning ??
-                      "Réponse simulée (meta.source = mock). Configurez OPENAI_API_KEY sur le backend pour une analyse réelle."}
-                  </p>
-                </div>
-              )}
-
-              {analysisMeta?.source === "openai" && (
-                <p className="mb-4 text-xs font-bold text-green-700 uppercase tracking-widest">
-                  Analyse réelle
-                  {analysisMeta.model ? ` · ${analysisMeta.model}` : ""}
-                </p>
-              )}
+              <h2 className="text-2xl font-bold text-primary-dk mb-6">Estimation de votre intervention</h2>
 
               <div className="bg-bg-alt border border-border rounded-2xl p-6 mb-6">
                 {[
@@ -401,7 +375,7 @@ export default function DemanderPage() {
               {/* Règle Métier : Si confidence < 0.6, afficher le champ supplémentaire */}
               {iaResult.confidence < 0.6 && (
                 <div className="mb-8 p-4 rounded-xl bg-orange-50 border border-orange-200">
-                  <label className="block text-sm font-bold text-orange-900 mb-2">L'IA manque de certitude sur l'image. Veuillez détailler le problème :</label>
+                  <label className="block text-sm font-bold text-orange-900 mb-2">Pour affiner l&apos;estimation, décrivez davantage le problème :</label>
                   <textarea 
                     className="form-input bg-white border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3 min-h-[80px]" 
                     placeholder="Mon évier fuit par le dessous depuis ce matin..."
