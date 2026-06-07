@@ -3,8 +3,12 @@ import {
   mapMissionToCreate,
   mapMissionsFromApi,
   mapMissionFromApiSingle,
+  mapGuestMissionCreateResponse,
 } from "@/lib/api/mappers";
+import { apiRequest } from "@/lib/api/client";
 import { apiRequestWithAuth } from "@/lib/auth/refresh";
+import { getAccessToken } from "@/lib/auth/session";
+import { setAuthCookies } from "@/lib/auth/server-actions";
 import { apiErrorJson } from "@/lib/api/errors";
 import type { MissionStatus } from "@/types/domain";
 
@@ -63,11 +67,30 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const payload = mapMissionToCreate(body);
-    const data = await apiRequestWithAuth<unknown>("/missions", {
-      method: "POST",
-      body: payload,
-    });
-    return NextResponse.json(mapMissionFromApiSingle(data), { status: 201 });
+    const token = await getAccessToken();
+    const data = token
+      ? await apiRequestWithAuth<Record<string, unknown>>("/missions", {
+          method: "POST",
+          body: payload,
+        })
+      : await apiRequest<Record<string, unknown>>("/missions", {
+          method: "POST",
+          body: payload,
+        });
+
+    const guest = mapGuestMissionCreateResponse(data);
+    if (!token && guest.accessToken) {
+      await setAuthCookies(guest.accessToken, guest.refreshToken);
+    }
+
+    return NextResponse.json(
+      {
+        mission: guest.mission,
+        accountCreated: guest.accountCreated,
+        autoLogin: Boolean(!token && guest.accessToken),
+      },
+      { status: 201 },
+    );
   } catch (error) {
     const { message, status, code } = apiErrorJson(
       error,

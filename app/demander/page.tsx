@@ -10,18 +10,16 @@ import { formatAiInterventionType } from "@/lib/ai/intervention-labels";
 import { isIndicativeEstimate } from "@/lib/ai/analysis-meta";
 import { clientMissionsApi, clientUploadsApi } from "@/services/api/client";
 import { authApi } from "@/services/api/auth";
-import { displayFirstName } from "@/lib/auth/display";
 import { getErrorMessage } from "@/lib/api/errors";
 import {
   DemanderCoordinatesStep,
   validateDemanderCoordinates,
 } from "@/components/demander/DemanderCoordinatesStep";
 import { useRouter } from "next/navigation";
-import { isProfileComplete } from "@/lib/auth/profile-completion";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 
-const steps = ["Photo", "Estimation", "Coordonnées"];
+const steps = ["Photo", "Estimation", "Coordonnées", "Confirmation"];
 
 export default function DemanderPage() {
   const router = useRouter();
@@ -50,7 +48,13 @@ export default function DemanderPage() {
   } | null>(null);
   
   // Form State
-  const [formData, setFormData] = useState({ fullName: "", phone: "", address: "" });
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
@@ -61,31 +65,31 @@ export default function DemanderPage() {
 
 
   const [file, setFile] = useState<File | null>(null);
-  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [submittedMissionId, setSubmittedMissionId] = useState<string | null>(
+    null,
+  );
+  const [accountCreated, setAccountCreated] = useState(false);
 
   useEffect(() => {
     authApi
       .getSession()
       .then((session) => {
-        if (!isProfileComplete(session.user, session.profile)) {
-          router.replace("/dashboard/complete-profile");
-          return;
-        }
-        setEmailVerified(session.user.emailVerified !== false);
-        const fullName = [
-          session.profile?.first_name ?? session.user.firstName,
-          session.profile?.last_name ?? session.user.lastName,
-        ]
-          .filter(Boolean)
-          .join(" ");
+        const firstName =
+          session.profile?.first_name ?? session.user.firstName ?? "";
+        const lastName =
+          session.profile?.last_name ?? session.user.lastName ?? "";
         const phone = session.profile?.phone ?? session.user.phone ?? "";
         setFormData((prev) => ({
           ...prev,
-          fullName: prev.fullName || fullName || displayFirstName(session.user, session.profile),
+          firstName: prev.firstName || firstName,
+          lastName: prev.lastName || lastName,
+          email: prev.email || session.user.email || "",
           phone: prev.phone || phone,
         }));
       })
-      .catch(() => {});
+      .catch(() => {
+        // Parcours invité : pas de redirection vers /login
+      });
 
     fetchAiPhotoStatus()
       .then(setAiStatus)
@@ -216,10 +220,18 @@ export default function DemanderPage() {
         creationMode ??
         (publicUrl ? (photoContext.trim() ? "mixed" : "ai_photo") : "text_manual");
 
-      await clientMissionsApi.create({
+      const customerName = [formData.firstName, formData.lastName]
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .join(" ");
+
+      const result = await clientMissionsApi.create({
         title: formatAiInterventionType(iaResult.type_intervention),
         status: "pending",
-        customer_name: formData.fullName,
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        customer_name: customerName,
+        customer_email: formData.email.trim(),
         customer_phone: formData.phone,
         location: formData.address,
         city: cityHint ?? undefined,
@@ -233,11 +245,15 @@ export default function DemanderPage() {
         niveau_urgence: iaResult.niveau_urgence,
         estimation_prix_min: iaResult.estimation_prix_min,
         estimation_prix_max: iaResult.estimation_prix_max,
+        ai_confidence: iaResult.confidence,
+        duree_estimee_minutes: iaResult.duree_estimee_minutes,
+        pieces_recommandees: iaResult.pieces_recommandees,
         creationMode: mode,
       });
 
-      alert("Votre demande a été envoyée avec succès ! Un artisan vous contactera d'ici quelques minutes.");
-      router.push("/dashboard/requests");
+      setSubmittedMissionId(result.mission.id);
+      setAccountCreated(result.accountCreated === true || result.autoLogin === true);
+      setStep(3);
       router.refresh();
     } catch (err) {
       console.error("Error creating mission:", err);
@@ -523,7 +539,6 @@ export default function DemanderPage() {
                 setCoords={setCoords}
                 cityHint={cityHint}
                 setCityHint={setCityHint}
-                emailVerified={emailVerified}
                 isSubmitting={isSubmitting}
                 formError={formError}
                 fieldErrors={fieldErrors}
@@ -531,6 +546,49 @@ export default function DemanderPage() {
                 onBack={() => setStep(1)}
                 onSubmit={handleSubmit}
               />
+            </div>
+          )}
+
+          {/* STEP 3 — Confirmation */}
+          {step === 3 && submittedMissionId && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center py-4">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">
+                Demande envoyée
+              </span>
+              <h2 className="text-2xl font-bold text-primary-dk mb-3">
+                Un artisan vous contacte sous 30 minutes
+              </h2>
+              <p className="text-sm text-text-muted mb-2 max-w-md mx-auto leading-relaxed">
+                Votre demande{" "}
+                <span className="font-mono text-primary-dk">#{submittedMissionId.slice(0, 8)}</span>{" "}
+                a été transmise aux artisans certifiés près de{" "}
+                {cityHint ?? "chez vous"}.
+              </p>
+              {accountCreated && (
+                <p className="text-sm text-text-muted mb-6 max-w-md mx-auto">
+                  Votre espace client a été créé. Un email de confirmation a
+                  été envoyé à{" "}
+                  <span className="font-semibold text-primary-dk">
+                    {formData.email}
+                  </span>
+                  . Cliquez sur le lien pour activer votre compte et définir un
+                  mot de passe.
+                </p>
+              )}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+                <Link
+                  href="/dashboard/requests"
+                  className="btn btn-primary justify-center"
+                >
+                  Suivre ma demande
+                </Link>
+                <Link href="/" className="btn btn-outline justify-center">
+                  Retour à l&apos;accueil
+                </Link>
+              </div>
             </div>
           )}
 

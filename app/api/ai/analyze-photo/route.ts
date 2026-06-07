@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { apiRequest } from "@/lib/api/client";
-import { apiRequestWithAuth } from "@/lib/auth/refresh";
-import { getAccessToken } from "@/lib/auth/session";
 import { ApiError, apiErrorJson } from "@/lib/api/errors";
+import { apiRequestPublicFirst } from "@/lib/api/public-or-auth";
 import { mapAnalyzePhotoResult } from "@/lib/ai/map-analysis";
 import { parseAnalyzePhotoMeta } from "@/lib/ai/analysis-meta";
 import { getMockAnalyzePhotoResult } from "@/lib/ai/mock-analysis";
@@ -36,18 +34,11 @@ export async function POST(req: Request) {
       backendBody.context = body.context.trim();
     }
 
-    const token = await getAccessToken();
-
     try {
-      const data = token
-        ? await apiRequestWithAuth<Record<string, unknown>>(
-            "/ai/analyze-photo",
-            { method: "POST", body: backendBody },
-          )
-        : await apiRequest<Record<string, unknown>>("/ai/analyze-photo", {
-            method: "POST",
-            body: backendBody,
-          });
+      const data = await apiRequestPublicFirst<Record<string, unknown>>(
+        "/ai/analyze-photo",
+        { method: "POST", body: backendBody },
+      );
 
       const analysis = mapAnalyzePhotoResult(data);
       const meta = parseAnalyzePhotoMeta(data);

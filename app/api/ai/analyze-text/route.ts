@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { apiRequest } from "@/lib/api/client";
-import { apiRequestWithAuth } from "@/lib/auth/refresh";
-import { getAccessToken } from "@/lib/auth/session";
+import { ApiError } from "@/lib/api/errors";
+import { apiRequestPublicFirst } from "@/lib/api/public-or-auth";
 import { mapAnalyzePhotoResult } from "@/lib/ai/map-analysis";
 import { parseAnalyzePhotoMeta } from "@/lib/ai/analysis-meta";
 
@@ -27,16 +26,10 @@ export async function POST(req: Request) {
       category: body.category?.trim() || "plomberie",
     };
 
-    const token = await getAccessToken();
-    const data = token
-      ? await apiRequestWithAuth<Record<string, unknown>>("/ai/analyze-text", {
-          method: "POST",
-          body: backendBody,
-        })
-      : await apiRequest<Record<string, unknown>>("/ai/analyze-text", {
-          method: "POST",
-          body: backendBody,
-        });
+    const data = await apiRequestPublicFirst<Record<string, unknown>>(
+      "/ai/analyze-text",
+      { method: "POST", body: backendBody },
+    );
 
     const analysis = mapAnalyzePhotoResult(data);
     const meta = parseAnalyzePhotoMeta(data);
@@ -44,7 +37,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ analysis, meta });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Analyse texte impossible.";
-    return NextResponse.json({ message }, { status: 500 });
+      error instanceof ApiError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : "Analyse texte impossible.";
+    const status = error instanceof ApiError ? error.status : 500;
+    const code = error instanceof ApiError ? error.code : undefined;
+    return NextResponse.json({ message, code }, { status });
   }
 }

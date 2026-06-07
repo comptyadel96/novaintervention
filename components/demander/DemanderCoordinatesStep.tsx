@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { FormField, inputClassName } from "@/components/forms/FormField";
 import { AddressAutocomplete } from "@/components/maps/AddressAutocomplete";
@@ -10,20 +9,26 @@ import { useGeocodeAddress } from "@/hooks/useGeocodeAddress";
 import type { LatLng } from "@/lib/maps/config";
 import {
   validateAddress,
-  validateFullName,
+  validateEmail,
+  validateName,
   validatePhone,
 } from "@/lib/forms/validate";
 
-type FormData = { fullName: string; phone: string; address: string };
+export type DemanderFormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+};
 
 type Props = {
-  formData: FormData;
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  formData: DemanderFormData;
+  setFormData: React.Dispatch<React.SetStateAction<DemanderFormData>>;
   coords: LatLng | null;
   setCoords: (c: LatLng | null) => void;
   cityHint: string | null;
   setCityHint: (c: string | null) => void;
-  emailVerified: boolean | null;
   isSubmitting: boolean;
   formError: string | null;
   fieldErrors: Record<string, string>;
@@ -39,7 +44,6 @@ function DemanderCoordinatesForm({
   setCoords,
   cityHint,
   setCityHint,
-  emailVerified,
   isSubmitting,
   formError,
   fieldErrors,
@@ -91,15 +95,10 @@ function DemanderCoordinatesForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      {emailVerified === false && (
-        <div className="mb-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          Confirmez votre adresse email depuis le lien reçu par email avant de
-          mandater un artisan.{" "}
-          <Link href="/dashboard" className="font-bold text-primary underline">
-            Tableau de bord
-          </Link>
-        </div>
-      )}
+      <p className="text-sm text-text-muted -mt-2 mb-1">
+        Aucun compte requis pour l&apos;instant. Nous créons votre espace client
+        automatiquement et vous envoyons un email de confirmation.
+      </p>
 
       {formError && (
         <div className="form-banner-error" role="alert">
@@ -109,43 +108,82 @@ function DemanderCoordinatesForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <FormField
-          label="Nom complet"
-          htmlFor="demand-fullName"
-          error={fieldErrors.fullName}
+          label="Prénom"
+          htmlFor="demand-firstName"
+          error={fieldErrors.firstName}
           required
         >
           <input
-            id="demand-fullName"
+            id="demand-firstName"
             type="text"
-            value={formData.fullName}
+            value={formData.firstName}
             onChange={(e) =>
-              setFormData({ ...formData, fullName: e.target.value })
+              setFormData({ ...formData, firstName: e.target.value })
             }
-            className={inputClassName(!!fieldErrors.fullName)}
-            placeholder="Jean Dupont"
-            autoComplete="name"
+            className={inputClassName(!!fieldErrors.firstName)}
+            placeholder="Jean"
+            autoComplete="given-name"
           />
         </FormField>
         <FormField
-          label="Téléphone d'urgence"
-          htmlFor="demand-phone"
-          error={fieldErrors.phone}
-          hint="10 chiffres minimum"
+          label="Nom"
+          htmlFor="demand-lastName"
+          error={fieldErrors.lastName}
           required
         >
           <input
-            id="demand-phone"
-            type="tel"
-            value={formData.phone}
+            id="demand-lastName"
+            type="text"
+            value={formData.lastName}
             onChange={(e) =>
-              setFormData({ ...formData, phone: e.target.value })
+              setFormData({ ...formData, lastName: e.target.value })
             }
-            className={inputClassName(!!fieldErrors.phone)}
-            placeholder="06 12 34 56 78"
-            autoComplete="tel"
+            className={inputClassName(!!fieldErrors.lastName)}
+            placeholder="Dupont"
+            autoComplete="family-name"
           />
         </FormField>
       </div>
+
+      <FormField
+        label="Email"
+        htmlFor="demand-email"
+        error={fieldErrors.email}
+        hint="Pour confirmer votre compte et recevoir le suivi de l'intervention"
+        required
+      >
+        <input
+          id="demand-email"
+          type="email"
+          value={formData.email}
+          onChange={(e) =>
+            setFormData({ ...formData, email: e.target.value })
+          }
+          className={inputClassName(!!fieldErrors.email)}
+          placeholder="jean.dupont@email.com"
+          autoComplete="email"
+        />
+      </FormField>
+
+      <FormField
+        label="Téléphone d'urgence"
+        htmlFor="demand-phone"
+        error={fieldErrors.phone}
+        hint="10 chiffres minimum — l'artisan vous contactera sur ce numéro"
+        required
+      >
+        <input
+          id="demand-phone"
+          type="tel"
+          value={formData.phone}
+          onChange={(e) =>
+            setFormData({ ...formData, phone: e.target.value })
+          }
+          className={inputClassName(!!fieldErrors.phone)}
+          placeholder="06 12 34 56 78"
+          autoComplete="tel"
+        />
+      </FormField>
 
       <div>
         <div className="flex justify-between items-end gap-2 flex-wrap mb-1">
@@ -175,8 +213,9 @@ function DemanderCoordinatesForm({
           </div>
         </div>
         <p className="text-[11px] text-text-muted mb-2">
-          Saisissez une adresse avec les suggestions Google Places, ou validez /
-          géolocalisez pour que l&apos;artisan vous trouve sur la carte.
+          Position GPS exacte requise pour orienter l&apos;artisan vers vous.
+          Utilisez les suggestions Google Places, validez l&apos;adresse ou la
+          géolocalisation.
         </p>
         <AddressAutocomplete
           id="demand-address"
@@ -208,7 +247,7 @@ function DemanderCoordinatesForm({
         {coords && (
           <p className="text-xs text-green-700 font-medium mt-2 flex items-center gap-1">
             <MapPin size={12} />
-            Position enregistrée
+            Position GPS enregistrée
             {cityHint ? ` · ${cityHint}` : ""} ({coords.lat.toFixed(4)},{" "}
             {coords.lng.toFixed(4)})
           </p>
@@ -226,7 +265,7 @@ function DemanderCoordinatesForm({
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || emailVerified === false}
+          disabled={isSubmitting}
           className="btn btn-primary flex-1 justify-center disabled:opacity-50"
         >
           {isSubmitting ? "Envoi en cours..." : "Mandater l'Artisan !"}
@@ -245,14 +284,18 @@ export function DemanderCoordinatesStep(props: Props) {
 }
 
 export function validateDemanderCoordinates(
-  formData: FormData,
+  formData: DemanderFormData,
   coords: LatLng | null,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
-  const nameCheck = validateFullName(formData.fullName);
+  const firstNameCheck = validateName(formData.firstName, "prénom");
+  const lastNameCheck = validateName(formData.lastName, "nom");
+  const emailCheck = validateEmail(formData.email);
   const phoneCheck = validatePhone(formData.phone);
   const addressCheck = validateAddress(formData.address);
-  if (!nameCheck.valid) errors.fullName = nameCheck.message!;
+  if (!firstNameCheck.valid) errors.firstName = firstNameCheck.message!;
+  if (!lastNameCheck.valid) errors.lastName = lastNameCheck.message!;
+  if (!emailCheck.valid) errors.email = emailCheck.message!;
   if (!phoneCheck.valid) errors.phone = phoneCheck.message!;
   if (!addressCheck.valid) errors.address = addressCheck.message!;
   if (!coords?.lat || !coords?.lng) {

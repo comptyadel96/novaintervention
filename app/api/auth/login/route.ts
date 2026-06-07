@@ -26,6 +26,15 @@ export async function POST(request: Request) {
 
     return NextResponse.json(session);
   } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      return NextResponse.json(
+        {
+          message: "Email ou mot de passe incorrect.",
+          code: "INVALID_CREDENTIALS",
+        },
+        { status: 401 },
+      );
+    }
     const message =
       error instanceof Error ? error.message : "Connexion impossible.";
     const status = error instanceof ApiError ? error.status : 500;

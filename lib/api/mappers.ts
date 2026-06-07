@@ -212,13 +212,42 @@ export type CreateMissionBackendPayload = {
   address?: string;
   photoBeforeUrl?: string;
   customerName?: string;
+  customerFirstName?: string;
+  customerLastName?: string;
+  customerEmail?: string;
   customerPhone?: string;
   priceFinal?: number;
   priceEstimate?: number;
   urgency?: string;
   status?: string;
   creationMode?: "ai_photo" | "text_manual" | "mixed";
+  aiConfidence?: number;
+  estimatedDurationMinutes?: number;
+  recommendedParts?: string[];
+  priceMinEstimate?: number;
 };
+
+export type GuestMissionCreateResult = {
+  mission: Mission;
+  accessToken?: string;
+  refreshToken?: string;
+  accountCreated?: boolean;
+};
+
+export function mapGuestMissionCreateResponse(
+  data: RawRecord,
+): GuestMissionCreateResult {
+  const missionRaw = (data.mission ?? data) as RawRecord;
+  return {
+    mission: mapMissionFromApiSingle(missionRaw),
+    accessToken: str(data.accessToken) ?? str(data.access_token),
+    refreshToken: str(data.refreshToken) ?? str(data.refresh_token),
+    accountCreated:
+      data.accountCreated === true ||
+      data.account_created === true ||
+      Boolean(str(data.accessToken) ?? str(data.access_token)),
+  };
+}
 
 export function mapMissionToCreate(
   input: Record<string, unknown>,
@@ -227,6 +256,21 @@ export function mapMissionToCreate(
   const category =
     typeIntervention?.replace("services__", "").replace(/_/g, " ") ??
     "plomberie";
+
+  const firstName =
+    str(input.first_name) ??
+    str(input.firstName) ??
+    str(input.customer_first_name) ??
+    str(input.customerFirstName);
+  const lastName =
+    str(input.last_name) ??
+    str(input.lastName) ??
+    str(input.customer_last_name) ??
+    str(input.customerLastName);
+  const fullName =
+    str(input.customer_name) ??
+    str(input.customerName) ??
+    [firstName, lastName].filter(Boolean).join(" ").trim();
 
   return {
     title: String(input.title ?? category),
@@ -240,18 +284,32 @@ export function mapMissionToCreate(
       str(input.photoBeforeUrl) ??
       str(input.photo_url) ??
       str(input.photo_before),
-    customerName: str(input.customer_name) ?? str(input.customerName),
+    customerName: fullName || undefined,
+    customerFirstName: firstName,
+    customerLastName: lastName,
+    customerEmail:
+      str(input.customer_email) ??
+      str(input.customerEmail) ??
+      str(input.email),
     customerPhone: str(input.customer_phone) ?? str(input.customerPhone),
     priceFinal: num(input.price) ?? num(input.priceFinal),
     priceEstimate:
       num(input.priceEstimate) ??
       num(input.estimation_prix_max) ??
       num(input.price),
+    priceMinEstimate:
+      num(input.estimation_prix_min) ?? num(input.priceMinEstimate),
     urgency: str(input.niveau_urgence) ?? str(input.urgency),
     status: str(input.status) ?? "pending",
     creationMode: str(input.creationMode) as
       | CreateMissionBackendPayload["creationMode"]
       | undefined,
+    aiConfidence: num(input.ai_confidence) ?? num(input.aiConfidence),
+    estimatedDurationMinutes:
+      num(input.duree_estimee_minutes) ?? num(input.estimatedDurationMinutes),
+    recommendedParts: Array.isArray(input.pieces_recommandees)
+      ? (input.pieces_recommandees as string[])
+      : undefined,
   };
 }
 

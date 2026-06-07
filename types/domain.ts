@@ -242,7 +242,10 @@ export interface AdminUser {
 export interface CreateMissionInput {
   title: string;
   status?: MissionStatus;
-  customer_name: string;
+  first_name: string;
+  last_name: string;
+  customer_name?: string;
+  customer_email: string;
   customer_phone: string;
   location: string;
   description?: string;
@@ -251,6 +254,12 @@ export interface CreateMissionInput {
   lat?: number;
   lng?: number;
 }
+
+export type GuestMissionCreateResponse = {
+  mission: Mission;
+  accountCreated?: boolean;
+  autoLogin?: boolean;
+};
 
 export interface RegisterInput {
   email: string;

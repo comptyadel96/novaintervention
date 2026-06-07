@@ -4,8 +4,6 @@ import { uploadsApi } from "@/services/api/uploads";
 import { ApiError } from "@/lib/api/errors";
 
 export async function POST(request: Request) {
-  const token = await getAccessToken();
-
   try {
     const formData = await request.formData();
     const file = formData.get("file");
@@ -13,6 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Fichier requis" }, { status: 400 });
     }
 
+    const token = await getAccessToken();
     const result = await uploadsApi.uploadInterventionPhoto(token, file);
     return NextResponse.json(result);
   } catch (error) {

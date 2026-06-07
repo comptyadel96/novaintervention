@@ -1,5 +1,6 @@
 import type {
   CreateMissionInput,
+  GuestMissionCreateResponse,
   Mission,
   MissionStatus,
   Profile,
@@ -92,7 +93,7 @@ export const clientMissionsApi = {
   },
 
   create(data: CreateMissionInput & Record<string, unknown>) {
-    return bffFetch<Mission>("/api/missions", {
+    return bffFetch<GuestMissionCreateResponse>("/api/missions", {
       method: "POST",
       body: JSON.stringify(data),
     });

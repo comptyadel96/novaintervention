@@ -39,6 +39,11 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Le service est temporairement indisponible. Réessayez dans quelques secondes.",
 
   UNAUTHORIZED: "Session expirée. Veuillez vous reconnecter.",
+  INVALID_CREDENTIALS: "Email ou mot de passe incorrect.",
+  EMAIL_PHONE_MISMATCH:
+    "Cet email et ce numéro de téléphone sont associés à des comptes différents. Connectez-vous ou contactez le support.",
+  SESSION_EXPIRED:
+    "Votre session a expiré. Reconnectez-vous puis réessayez.",
 
   TWILIO_NOT_CONFIGURED:
 
@@ -109,6 +114,15 @@ export function isBannedError(error: unknown): boolean {
 export function getErrorMessage(error: unknown, fallback: string): string {
 
   if (error instanceof ApiError) {
+
+    if (error.code === "UNAUTHORIZED" && error.message.trim()) {
+      const generic = /^(non authentifi|unauthorized|unauthenticated)$/i.test(
+        error.message.trim(),
+      );
+      if (!generic) {
+        return error.message;
+      }
+    }
 
     if (error.code && ERROR_MESSAGES[error.code]) {
 
