@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { AccountingPeriod, ArtisanAccounting } from "@/types/domain";
+import { bffFetch } from "@/lib/api/bff-client";
 
 const PERIODS: { value: AccountingPeriod; label: string }[] = [
   { value: "day", label: "Jour" },
@@ -17,7 +18,10 @@ function defaultRange(period: AccountingPeriod): { from: string; to: string } {
   else if (period === "week") from.setDate(to.getDate() - 7 * 12);
   else if (period === "month") from.setMonth(to.getMonth() - 6);
   else from.setFullYear(to.getFullYear() - 1);
-  return { from: from.toISOString(), to: to.toISOString() };
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+  };
 }
 
 function formatBucket(bucket: string, period: AccountingPeriod): string {
@@ -44,17 +48,9 @@ export function ArtisanAccountingCharts() {
     const { from, to } = defaultRange(period);
     const q = new URLSearchParams({ period, from, to });
     try {
-      const res = await fetch(`/api/artisans/me/accounting?${q}`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(
-          (payload as { message?: string }).message ??
-            "Données comptables indisponibles.",
-        );
-      }
-      const json = (await res.json()) as ArtisanAccounting;
+      const json = await bffFetch<ArtisanAccounting>(
+        `/api/artisans/me/accounting?${q}`,
+      );
       setData({
         period: json.period ?? period,
         totalRevenue: json.totalRevenue,

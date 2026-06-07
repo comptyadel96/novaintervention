@@ -8,23 +8,58 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreatePartnerApplicationInput;
 
+    if (
+      !body?.firstName?.trim() ||
+      !body?.lastName?.trim() ||
+      !body?.phone?.trim() ||
+      !body?.email?.trim() ||
+      !body?.password ||
+      !body?.city?.trim()
+    ) {
+      return NextResponse.json(
+        {
+          message: "Tous les champs sont obligatoires.",
+          code: "VALIDATION_ERROR",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (body.password.length < 8) {
+      return NextResponse.json(
+        {
+          message: "Le mot de passe doit contenir au moins 8 caractères.",
+          code: "VALIDATION_ERROR",
+        },
+        { status: 400 },
+      );
+    }
+
     const data = await apiRequest<Record<string, unknown>>(
       "/partner-applications",
       {
         method: "POST",
         body: {
-          firstName: body.firstName,
-          lastName: body.lastName,
-          phone: body.phone,
-          email: body.email?.trim() || undefined,
-          city: body.city,
+          firstName: body.firstName.trim(),
+          lastName: body.lastName.trim(),
+          phone: body.phone.trim(),
+          email: body.email.trim(),
+          password: body.password,
+          city: body.city.trim(),
           trade: "plomberie",
         },
       },
     );
 
     return NextResponse.json(
-      { application: mapPartnerApplication(data) },
+      {
+        application: mapPartnerApplication(data),
+        id: data.id,
+        userId: data.userId ?? data.user_id,
+        message: data.message,
+        accountCreated: data.accountCreated ?? data.account_created,
+        emailSent: data.emailSent ?? data.email_sent,
+      },
       { status: 201 },
     );
   } catch (error) {

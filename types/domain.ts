@@ -171,8 +171,17 @@ export interface CreatePartnerApplicationInput {
   firstName: string;
   lastName: string;
   phone: string;
-  email?: string;
+  email: string;
+  password: string;
   city: string;
+}
+
+export interface PartnerApplicationSubmitResult {
+  application: PartnerApplication;
+  message: string;
+  accountCreated?: boolean;
+  emailSent?: boolean;
+  userId?: string;
 }
 
 /** Données publiques pour le simulateur revenus artisan (/devenir-partenaire). */

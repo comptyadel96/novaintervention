@@ -19,9 +19,9 @@ export async function POST(req: Request) {
       context?: string;
     };
 
-    if (!body?.image && !body?.imageUrl) {
+    if (!body?.image && !body?.imageUrl && !body?.context?.trim()) {
       return NextResponse.json(
-        { message: "Image requise", code: "VALIDATION_ERROR" },
+        { message: "Image ou description requise", code: "VALIDATION_ERROR" },
         { status: 400 },
       );
     }

@@ -1,11 +1,11 @@
-export type AnalyzePhotoSource = "openai" | "mock";
+export type AnalyzePhotoSource = "openai" | "mock" | "fallback" | "manual";
 
 export type AnalyzePhotoMeta = {
   source: AnalyzePhotoSource;
   model?: string;
+  fallbackReason?: string;
 };
 
-/** meta.source === "mock" → bandeau mode démonstration (spec backend). */
 export function parseAnalyzePhotoMeta(payload: unknown): AnalyzePhotoMeta {
   const root = (payload ?? {}) as Record<string, unknown>;
   const meta = (root.meta ?? {}) as Record<string, unknown>;
@@ -14,15 +14,26 @@ export function parseAnalyzePhotoMeta(payload: unknown): AnalyzePhotoMeta {
     meta.source ?? root.source ?? "openai",
   ).toLowerCase();
 
-  if (rawSource === "mock") {
-    return {
-      source: "mock",
-      model: meta.model ? String(meta.model) : undefined,
-    };
-  }
+  const source: AnalyzePhotoSource =
+    rawSource === "mock" ||
+    rawSource === "fallback" ||
+    rawSource === "manual" ||
+    rawSource === "openai"
+      ? rawSource
+      : "openai";
 
   return {
-    source: "openai",
+    source,
     model: meta.model ? String(meta.model) : undefined,
+    fallbackReason:
+      meta.fallbackReason != null
+        ? String(meta.fallbackReason)
+        : meta.fallback_reason != null
+          ? String(meta.fallback_reason)
+          : undefined,
   };
+}
+
+export function isIndicativeEstimate(meta: AnalyzePhotoMeta): boolean {
+  return meta.source !== "openai" || meta.fallbackReason != null;
 }

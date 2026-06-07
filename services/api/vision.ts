@@ -12,6 +12,11 @@ export type AnalyzePhotoInput = {
   context?: string;
 };
 
+export type AnalyzeTextInput = {
+  description: string;
+  category?: string;
+};
+
 export type AnalyzePhotoResponse = {
   analysis: AnalyzePhotoResult;
   meta: AnalyzePhotoMeta;
@@ -22,8 +27,8 @@ export type AnalyzePhotoResponse = {
 export async function analyzePhoto(
   input: AnalyzePhotoInput,
 ): Promise<AnalyzePhotoResponse> {
-  if (!input.image && !input.imageUrl) {
-    throw new Error("Aucune image à analyser.");
+  if (!input.image && !input.imageUrl && !input.context?.trim()) {
+    throw new Error("Aucune image ou description à analyser.");
   }
 
   const payload = await bffFetch<Record<string, unknown>>(
@@ -43,4 +48,24 @@ export async function analyzePhoto(
   const warning = (payload as { _warning?: string })._warning;
 
   return { analysis, meta, warning };
+}
+
+export async function analyzeText(
+  input: AnalyzeTextInput,
+): Promise<AnalyzePhotoResponse> {
+  const payload = await bffFetch<Record<string, unknown>>(
+    "/api/ai/analyze-text",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        description: input.description,
+        category: input.category ?? "plomberie",
+      }),
+    },
+  );
+
+  const analysis = mapAnalyzePhotoResult(payload);
+  const meta = parseAnalyzePhotoMeta(payload);
+
+  return { analysis, meta };
 }

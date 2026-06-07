@@ -3,10 +3,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { analyzePhoto } from "@/services/api/vision";
+import { analyzePhoto, analyzeText } from "@/services/api/vision";
 import { fetchAiPhotoStatus } from "@/services/api/ai-photo";
-import type { AnalyzePhotoResult } from "@/types";
+import type { AnalyzePhotoMeta, AnalyzePhotoResult } from "@/types";
 import { formatAiInterventionType } from "@/lib/ai/intervention-labels";
+import { isIndicativeEstimate } from "@/lib/ai/analysis-meta";
 import { clientMissionsApi, clientUploadsApi } from "@/services/api/client";
 import { authApi } from "@/services/api/auth";
 import { displayFirstName } from "@/lib/auth/display";
@@ -34,10 +35,18 @@ export default function DemanderPage() {
   const [extraDesc, setExtraDesc] = useState("");
   const [photoContext, setPhotoContext] = useState("");
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
+  const [analysisMeta, setAnalysisMeta] = useState<AnalyzePhotoMeta | null>(
+    null,
+  );
+  const [creationMode, setCreationMode] = useState<
+    "ai_photo" | "text_manual" | "mixed" | null
+  >(null);
+  const [inputMode, setInputMode] = useState<"photo" | "text">("photo");
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [aiStatus, setAiStatus] = useState<{
     enabled: boolean;
     model?: string;
+    textFallbackAvailable?: boolean;
   } | null>(null);
   
   // Form State
@@ -89,6 +98,7 @@ export default function DemanderPage() {
       setFile(f);
       setUploadedPhotoUrl(null);
       setIaResult(null);
+      setAnalysisMeta(null);
       setAnalysisError(null);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -112,24 +122,26 @@ export default function DemanderPage() {
           imageUrl = url;
           setUploadedPhotoUrl(url);
         } catch {
-          // Connexion requise pour l'upload : analyse via base64 côté backend
+          // analyse via base64 si upload indisponible
         }
       }
 
-      const { analysis } = await analyzePhoto({
+      const { analysis, meta } = await analyzePhoto({
         imageUrl,
         image: imageUrl ? undefined : preview,
         context: photoContext.trim() || undefined,
       });
 
       setIaResult(analysis);
+      setAnalysisMeta(meta);
+      setCreationMode(photoContext.trim() ? "mixed" : "ai_photo");
       setStep(1);
     } catch (err) {
       console.error(err);
       setAnalysisError(
         getErrorMessage(
           err,
-          "Impossible d'analyser la photo pour le moment. Réessayez ou choisissez une autre image.",
+          "Impossible d'analyser la photo pour le moment.",
         ),
       );
     } finally {
@@ -137,9 +149,52 @@ export default function DemanderPage() {
     }
   };
 
+  const startTextAnalysis = async () => {
+    const description = photoContext.trim();
+    if (description.length < 10) {
+      setAnalysisError(
+        "Décrivez le problème en au moins 10 caractères pour continuer sans photo.",
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    setAnalysisError(null);
+
+    try {
+      const { analysis, meta } = await analyzeText({
+        description,
+        category: "plomberie",
+      });
+      setIaResult(analysis);
+      setAnalysisMeta(meta);
+      setCreationMode("text_manual");
+      setFile(null);
+      setPreview(null);
+      setUploadedPhotoUrl(null);
+      setStep(1);
+    } catch (err) {
+      console.error(err);
+      setAnalysisError(
+        getErrorMessage(err, "Impossible d'estimer votre demande pour le moment."),
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const continueWithoutPhoto = () => {
+    setInputMode("text");
+    setAnalysisError(null);
+    if (photoContext.trim().length >= 10) {
+      void startTextAnalysis();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!iaResult || !file) return;
+    if (!iaResult) return;
+    if (creationMode !== "text_manual" && !file) return;
 
     setFormError(null);
     const errors = validateDemanderCoordinates(formData, coords);
@@ -151,11 +206,15 @@ export default function DemanderPage() {
 
     setIsSubmitting(true);
     try {
-      let publicUrl = uploadedPhotoUrl;
-      if (!publicUrl) {
+      let publicUrl = uploadedPhotoUrl ?? undefined;
+      if (file && !publicUrl) {
         const uploaded = await clientUploadsApi.uploadInterventionPhoto(file);
         publicUrl = uploaded.url;
       }
+
+      const mode =
+        creationMode ??
+        (publicUrl ? (photoContext.trim() ? "mixed" : "ai_photo") : "text_manual");
 
       await clientMissionsApi.create({
         title: formatAiInterventionType(iaResult.type_intervention),
@@ -166,13 +225,15 @@ export default function DemanderPage() {
         city: cityHint ?? undefined,
         description: extraDesc || iaResult.description_probleme,
         price: iaResult.estimation_prix_max,
-        photo_url: publicUrl!,
+        priceEstimate: iaResult.estimation_prix_max,
+        ...(publicUrl ? { photo_url: publicUrl } : {}),
         lat: coords!.lat,
         lng: coords!.lng,
         type_intervention: iaResult.type_intervention,
         niveau_urgence: iaResult.niveau_urgence,
         estimation_prix_min: iaResult.estimation_prix_min,
         estimation_prix_max: iaResult.estimation_prix_max,
+        creationMode: mode,
       });
 
       alert("Votre demande a été envoyée avec succès ! Un artisan vous contactera d'ici quelques minutes.");
@@ -229,85 +290,122 @@ export default function DemanderPage() {
           {step === 0 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Étape 1 sur 3</span>
-              <h2 className="text-2xl font-bold text-primary-dk mb-4">Décrivez l'urgence</h2>
+              <h2 className="text-2xl font-bold text-primary-dk mb-4">Décrivez l&apos;urgence</h2>
               <p className="text-sm text-text-muted mb-6 leading-relaxed">
-                Ajoutez une photo de la zone concernée : notre assistant analyse
-                l&apos;image pour estimer le type d&apos;intervention, le niveau
-                d&apos;urgence et une fourchette de prix indicative.
+                Ajoutez une photo ou décrivez le problème : nous estimons le type
+                d&apos;intervention, l&apos;urgence et une fourchette de prix indicative.
               </p>
+
+              <div className="flex gap-2 p-1 bg-bg-alt rounded-xl mb-6">
+                <button
+                  type="button"
+                  onClick={() => setInputMode("photo")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${
+                    inputMode === "photo"
+                      ? "bg-white text-primary-dk shadow-sm"
+                      : "text-text-muted"
+                  }`}
+                >
+                  Avec photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInputMode("text")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${
+                    inputMode === "text"
+                      ? "bg-white text-primary-dk shadow-sm"
+                      : "text-text-muted"
+                  }`}
+                >
+                  Sans photo
+                </button>
+              </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-bold text-primary-dk mb-2">
-                  Décrivez le problème (optionnel)
+                  {inputMode === "photo"
+                    ? "Décrivez le problème (optionnel)"
+                    : "Décrivez le problème (obligatoire)"}
                 </label>
                 <textarea
                   value={photoContext}
                   onChange={(e) => setPhotoContext(e.target.value)}
-                  className="form-input w-full min-h-[72px]"
+                  className="form-input w-full min-h-[96px]"
                   placeholder="Ex. fuite sous l'évier cuisine, eau tiède, depuis ce matin…"
                   disabled={isLoading}
                 />
               </div>
-
-              {aiStatus?.enabled === false && (
-                <div
-                  className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
-                  role="status"
-                >
-                  <p className="font-bold">Analyse photo indisponible</p>
-                  <p className="mt-1">
-                    Ce service est momentanément indisponible. Réessayez plus tard
-                    ou contactez-nous si le problème persiste.
-                  </p>
-                </div>
-              )}
 
               {analysisError && (
                 <div className="form-banner-error mb-4" role="alert">
                   {analysisError}
                 </div>
               )}
-              
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-primary/30 bg-bg-alt rounded-2xl p-10 cursor-pointer hover:bg-bg-body transition-colors mb-6">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  capture="environment"
-                  onChange={handleFileChange} 
-                  className="hidden" 
-                  disabled={isLoading} 
-                />
-                {preview ? (
-                  <OptimizedImage
-                    src={preview}
-                    alt="Aperçu"
-                    width={320}
-                    height={192}
-                    className="max-h-48 rounded-xl object-cover shadow-sm mb-4"
-                  />
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-primary mb-4"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-                    <p className="text-primary-dk font-bold mb-1">Ajouter une photo</p>
-                    <p className="text-xs text-text-muted">Glissez-déposez ou cliquez ici</p>
-                  </>
-                )}
-              </label>
 
-              <button 
-                onClick={startAnalysis} 
-                disabled={!preview || isLoading || aiStatus?.enabled === false} 
-                className="btn btn-primary w-full justify-center text-lg py-4 flex items-center gap-3 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Analyse en cours…
-                  </>
-                ) : (
-                  "Analyser ma photo"
-                )}
-              </button>
+              {inputMode === "photo" ? (
+                <>
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-primary/30 bg-bg-alt rounded-2xl p-10 cursor-pointer hover:bg-bg-body transition-colors mb-6">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      disabled={isLoading}
+                    />
+                    {preview ? (
+                      <OptimizedImage
+                        src={preview}
+                        alt="Aperçu"
+                        width={320}
+                        height={192}
+                        className="max-h-48 rounded-xl object-cover shadow-sm mb-4"
+                      />
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-primary mb-4"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                        <p className="text-primary-dk font-bold mb-1">Ajouter une photo</p>
+                        <p className="text-xs text-text-muted">Glissez-déposez ou cliquez ici</p>
+                      </>
+                    )}
+                  </label>
+
+                  <button
+                    onClick={startAnalysis}
+                    disabled={!preview || isLoading}
+                    className="btn btn-primary w-full justify-center text-lg py-4 flex items-center gap-3 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Analyse en cours…
+                      </>
+                    ) : (
+                      "Analyser ma photo"
+                    )}
+                  </button>
+
+                  {(analysisError || aiStatus?.textFallbackAvailable !== false) && (
+                    <button
+                      type="button"
+                      onClick={continueWithoutPhoto}
+                      disabled={isLoading}
+                      className="btn btn-outline w-full justify-center mt-3"
+                    >
+                      Continuer sans photo
+                    </button>
+                  )}
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startTextAnalysis}
+                  disabled={isLoading || photoContext.trim().length < 10}
+                  className="btn btn-primary w-full justify-center text-lg py-4 disabled:opacity-50"
+                >
+                  {isLoading ? "Estimation en cours…" : "Obtenir une estimation"}
+                </button>
+              )}
             </div>
           )}
 
@@ -316,6 +414,16 @@ export default function DemanderPage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Étape 2 sur 3</span>
               <h2 className="text-2xl font-bold text-primary-dk mb-6">Estimation de votre intervention</h2>
+
+              {analysisMeta && isIndicativeEstimate(analysisMeta) && (
+                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  <p className="font-bold">Estimation indicative</p>
+                  <p className="mt-1">
+                    Un artisan certifié affinera le diagnostic sur place. Les
+                    montants peuvent varier selon l&apos;intervention réelle.
+                  </p>
+                </div>
+              )}
 
               <div className="bg-bg-alt border border-border rounded-2xl p-6 mb-6">
                 {[
@@ -337,13 +445,20 @@ export default function DemanderPage() {
                 ))}
               </div>
 
-              <div className="bg-green-50 border border-green-200 p-4 rounded-xl mb-6 flex gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 flex-shrink-0 mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <div>
-                  <p className="text-green-800 font-bold text-sm mb-1">Confiance de détection : {Math.round(iaResult.confidence * 100)}%</p>
-                  <p className="text-green-700 text-xs">{iaResult.description_probleme}</p>
+              {iaResult.confidence > 0 ? (
+                <div className="bg-green-50 border border-green-200 p-4 rounded-xl mb-6 flex gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 flex-shrink-0 mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <div>
+                    <p className="text-green-800 font-bold text-sm mb-1">Confiance de détection : {Math.round(iaResult.confidence * 100)}%</p>
+                    <p className="text-green-700 text-xs">{iaResult.description_probleme}</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-bg-alt border border-border p-4 rounded-xl mb-6">
+                  <p className="text-sm font-bold text-primary-dk mb-1">Description</p>
+                  <p className="text-sm text-text-muted">{iaResult.description_probleme}</p>
+                </div>
+              )}
 
               {iaResult.pieces_recommandees.length > 0 && (
                 <div className="mb-6 rounded-2xl border border-border bg-white p-4">

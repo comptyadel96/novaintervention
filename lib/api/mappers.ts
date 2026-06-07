@@ -209,12 +209,15 @@ export type CreateMissionBackendPayload = {
   latitude?: number;
   longitude?: number;
   city?: string;
+  address?: string;
   photoBeforeUrl?: string;
   customerName?: string;
   customerPhone?: string;
   priceFinal?: number;
+  priceEstimate?: number;
   urgency?: string;
   status?: string;
+  creationMode?: "ai_photo" | "text_manual" | "mixed";
 };
 
 export function mapMissionToCreate(
@@ -231,7 +234,8 @@ export function mapMissionToCreate(
     category,
     latitude: num(input.lat) ?? num(input.latitude),
     longitude: num(input.lng) ?? num(input.longitude),
-    city: str(input.location) ?? str(input.city),
+    city: str(input.city) ?? undefined,
+    address: str(input.location) ?? str(input.address),
     photoBeforeUrl:
       str(input.photoBeforeUrl) ??
       str(input.photo_url) ??
@@ -239,8 +243,15 @@ export function mapMissionToCreate(
     customerName: str(input.customer_name) ?? str(input.customerName),
     customerPhone: str(input.customer_phone) ?? str(input.customerPhone),
     priceFinal: num(input.price) ?? num(input.priceFinal),
+    priceEstimate:
+      num(input.priceEstimate) ??
+      num(input.estimation_prix_max) ??
+      num(input.price),
     urgency: str(input.niveau_urgence) ?? str(input.urgency),
     status: str(input.status) ?? "pending",
+    creationMode: str(input.creationMode) as
+      | CreateMissionBackendPayload["creationMode"]
+      | undefined,
   };
 }
 

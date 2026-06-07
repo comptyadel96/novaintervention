@@ -10,6 +10,9 @@ export async function GET() {
     return NextResponse.json({
       enabled: data.enabled === true,
       model: data.model,
+      textFallbackAvailable:
+        (data as { textFallbackAvailable?: boolean }).textFallbackAvailable !==
+        false,
     });
   } catch (error) {
     const { message, status } = apiErrorJson(
