@@ -15,6 +15,7 @@ import {
   missionStatusClass,
 } from "@/lib/missions/labels";
 import { MissionPhoto } from "@/components/ui/OptimizedImage";
+import { getErrorMessage } from "@/lib/api/errors";
 import type { Mission } from "@/types/domain";
 
 export function ClientRequestsList({ customerId }: { customerId: string }) {
@@ -44,8 +45,13 @@ export function ClientRequestsList({ customerId }: { customerId: string }) {
         "Merci ! Votre validation a été enregistrée. L'artisan doit aussi confirmer pour clôturer la mission.",
       );
       load();
-    } catch {
-      alert("Erreur lors de la validation.");
+    } catch (err) {
+      alert(
+        getErrorMessage(
+          err,
+          "Erreur lors de la validation. L'endpoint confirm-client est peut-être absent côté backend.",
+        ),
+      );
     }
   };
 

@@ -85,6 +85,22 @@ const ERROR_MESSAGES: Record<string, string> = {
 
     "Réponse IA inattendue. Réessayez ou contactez le support.",
 
+  MISSION_INVALID_STATE:
+
+    "Cette action n'est pas possible pour l'état actuel de la mission.",
+
+  MISSION_ALREADY_CONFIRMED:
+
+    "Vous avez déjà validé cette intervention.",
+
+  FORBIDDEN:
+
+    "Vous n'avez pas l'autorisation pour cette action.",
+
+  NOT_FOUND:
+
+    "Mission introuvable ou endpoint backend non disponible.",
+
 };
 
 

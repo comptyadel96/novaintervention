@@ -8,6 +8,7 @@ import Link from "next/link";
 import { generateInvoicePDF } from "@/lib/pdf/invoice-generator";
 import { useRouter } from "next/navigation";
 import { displayFirstName, displayPhone, resolveRole } from "@/lib/auth/display";
+import { getErrorMessage } from "@/lib/api/errors";
 import { UserAvatar } from "@/components/user/UserAvatar";
 import { MissionPhoto } from "@/components/ui/OptimizedImage";
 import type { AuthUser, Profile, Mission } from "@/types/domain";
@@ -61,7 +62,12 @@ export function ClientView({
       window.location.reload();
     } catch (err) {
       console.error("Error confirming work:", err);
-      alert("Erreur lors de la validation des travaux.");
+      alert(
+        getErrorMessage(
+          err,
+          "Erreur lors de la validation des travaux. Vérifiez que votre email est confirmé ou réessayez.",
+        ),
+      );
     }
   };
 

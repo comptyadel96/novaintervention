@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { mapMissionFromApiSingle } from "@/lib/api/mappers";
 import { apiRequestWithAuth } from "@/lib/auth/refresh";
-import { ApiError } from "@/lib/api/errors";
+import { apiErrorJson } from "@/lib/api/errors";
 
 export async function proxyMissionAction(
   missionId: string,
@@ -18,10 +18,10 @@ export async function proxyMissionAction(
     );
     return NextResponse.json(mapMissionFromApiSingle(data));
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Action impossible.";
-    const status = error instanceof ApiError ? error.status : 500;
-    const code = error instanceof ApiError ? error.code : undefined;
+    const { message, status, code } = apiErrorJson(
+      error,
+      "Action impossible.",
+    );
     return NextResponse.json({ message, code }, { status });
   }
 }

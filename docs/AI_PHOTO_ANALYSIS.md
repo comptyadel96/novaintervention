@@ -9,7 +9,7 @@ Diagnostic plomberie (fuite, débouchage…) via **OpenAI Vision côté backend 
 | **Backend** | `OPENAI_API_KEY=sk-proj-...` |
 | **Backend** | `OPENAI_MODEL=gpt-4o-mini` (défaut, recommandé) |
 | **Backend** | `AI_ANALYZE_ALLOW_MOCK=true` — dev seulement si pas de clé |
-| **Front** | Jamais de clé OpenAI publique |
+| **Front** | Jamais de clé OpenAI publique — `OPENAI_API_KEY` dans `.env.local` Next.js **ne sert pas** |
 | **Front** (optionnel) | `AI_ANALYZE_ALLOW_MOCK=true` — secours si l’API est injoignable en local |
 
 ## Choix du modèle : backend ou console OpenAI ?
@@ -93,6 +93,15 @@ Libellés FR : `lib/ai/intervention-labels.ts`.
 | `CONTACT_NOT_VERIFIED` | Vérifier email/téléphone |
 
 Messages : `lib/api/errors.ts`.
+
+## Dépannage
+
+| Symptôme | Cause probable |
+|----------|----------------|
+| `GET /api/ai/status` → `enabled: true` mais analyse échoue | Clé OpenAI invalide/expirée sur **Hetzner**, quota dépassé, ou image trop lourde (upload Cloudinary échoué) |
+| Clé dans Vercel / `.env.local` front | **Ignorée** — seul le backend appelle OpenAI |
+| `401` sur analyse | Route backend pas encore publique (voir `GUEST_REQUEST_BACKEND.md`) |
+| `500` / `AI_UNAVAILABLE` | Logs backend `docker logs` / PM2 sur le serveur API |
 
 ## Flux front (`/demander`)
 
