@@ -37,7 +37,7 @@ export default async function DashboardMissionsPage() {
         </Link>
       </header>
 
-      <ArtisanMissionsMapSection activeMissions={[]} />
+      <ArtisanMissionsMapSection />
 
       <section className="card p-8 bg-white border border-border rounded-4xl shadow-sm">
         <ArtisanMissionsList artisanId={session.user.id} />

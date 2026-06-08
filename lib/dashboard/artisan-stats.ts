@@ -115,16 +115,13 @@ export async function buildArtisanStats(
     const raw = await artisansApi.getStats(token);
 
     apiStats = {
-
       totalRevenue: raw.totalRevenue,
-
       totalGmv: raw.totalGmv,
+      pendingRevenue: raw.pendingRevenue,
+      pendingGmv: raw.pendingGmv,
       monthlyRevenue: raw.monthlyRevenue,
-
       weeklyMissionsCount: raw.weeklyMissionsCount,
-
       activeClients: raw.activeClients,
-
     };
 
   } catch {
@@ -140,11 +137,9 @@ export async function buildArtisanStats(
   try {
 
     missions = await missionsApi.list(token, {
-
       role: "artisan",
-
+      assignedOnly: true,
       limit: 100,
-
     });
 
   } catch {
@@ -172,7 +167,8 @@ export async function buildArtisanStats(
     totalRevenue: apiStats.totalRevenue ?? computed.totalRevenue,
 
     totalGmv: apiStats.totalGmv,
-
+    pendingRevenue: apiStats.pendingRevenue,
+    pendingGmv: apiStats.pendingGmv,
     monthlyRevenue: apiStats.monthlyRevenue ?? computed.monthlyRevenue,
 
     weeklyMissionsCount:

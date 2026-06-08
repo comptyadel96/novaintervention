@@ -13,6 +13,8 @@ export const artisansApi = {
     return apiRequest<{
       totalRevenue?: number;
       totalGmv?: number;
+      pendingRevenue?: number;
+      pendingGmv?: number;
       monthlyRevenue?: number;
       weeklyMissionsCount?: number;
       activeClients?: number;

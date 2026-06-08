@@ -80,6 +80,7 @@ export default function DemanderPage() {
     null,
   );
   const [accountCreated, setAccountCreated] = useState(false);
+  const [verificationEmailSent, setVerificationEmailSent] = useState(false);
 
   useEffect(() => {
     authApi
@@ -268,6 +269,7 @@ export default function DemanderPage() {
 
       setSubmittedMissionId(result.mission.id);
       setAccountCreated(result.accountCreated === true || result.autoLogin === true);
+      setVerificationEmailSent(result.verificationEmailSent === true);
       setStep(3);
       router.refresh();
     } catch (err) {
@@ -592,15 +594,24 @@ export default function DemanderPage() {
                 a été transmise aux artisans certifiés près de{" "}
                 {cityHint ?? "chez vous"}.
               </p>
-              {accountCreated && (
+              {(accountCreated || verificationEmailSent) && (
                 <p className="text-sm text-text-muted mb-6 max-w-md mx-auto">
-                  Un email a été envoyé à{" "}
-                  <span className="font-semibold text-primary-dk">
-                    {formData.email}
-                  </span>
-                  . Cliquez sur le lien pour{" "}
-                  <strong>choisir votre mot de passe</strong> et activer votre
-                  compte. Vous pourrez ensuite vous connecter avec votre email.
+                  {verificationEmailSent || accountCreated ? (
+                    <>
+                      Un email a été envoyé à{" "}
+                      <span className="font-semibold text-primary-dk">
+                        {formData.email}
+                      </span>
+                      . Cliquez sur le lien pour{" "}
+                      <strong>choisir votre mot de passe</strong> et activer
+                      votre compte.
+                    </>
+                  ) : (
+                    <>
+                      Votre demande est enregistrée. Connectez-vous pour suivre
+                      l&apos;intervention.
+                    </>
+                  )}
                 </p>
               )}
               <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">

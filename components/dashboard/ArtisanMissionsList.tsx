@@ -16,6 +16,7 @@ export function ArtisanMissionsList({ artisanId }: { artisanId: string }) {
     try {
       const data = await clientMissionsApi.list({
         role: "artisan",
+        assignedOnly: true,
         limit: 100,
       });
       setMissions(

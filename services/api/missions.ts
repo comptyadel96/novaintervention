@@ -12,6 +12,8 @@ export type MissionFilters = {
   role?: string;
   status?: MissionStatus;
   unassigned?: boolean;
+  assigned_only?: boolean;
+  assignedOnly?: boolean;
   near_lat?: number;
   near_lng?: number;
   radius_km?: number;
@@ -27,6 +29,8 @@ function buildQuery(filters?: MissionFilters): string {
   if (filters.role) params.set("role", filters.role);
   if (filters.status) params.set("status", filters.status);
   if (filters.unassigned) params.set("unassigned", "true");
+  if (filters.assigned_only || filters.assignedOnly)
+    params.set("assignedOnly", "true");
   if (filters.near_lat != null) params.set("nearLat", String(filters.near_lat));
   if (filters.near_lng != null) params.set("nearLng", String(filters.near_lng));
   if (filters.radius_km != null)

@@ -58,6 +58,10 @@ export function mapMissionFromApi(raw: RawRecord): Mission {
       null,
     created_at: str(raw.createdAt) ?? str(raw.created_at),
     completed_at: str(raw.completedAt) ?? str(raw.completed_at),
+    en_route_at:
+      str(raw.enRouteAt) ??
+      str(raw.en_route_at) ??
+      null,
     artisan: artisanRaw
       ? {
           first_name:
@@ -232,6 +236,7 @@ export type GuestMissionCreateResult = {
   accessToken?: string;
   refreshToken?: string;
   accountCreated?: boolean;
+  verificationEmailSent?: boolean;
 };
 
 export function mapGuestMissionCreateResponse(
@@ -246,6 +251,11 @@ export function mapGuestMissionCreateResponse(
       data.accountCreated === true ||
       data.account_created === true ||
       Boolean(str(data.accessToken) ?? str(data.access_token)),
+    verificationEmailSent:
+      data.verificationEmailSent === true ||
+      data.verification_email_sent === true ||
+      data.emailSent === true ||
+      data.email_sent === true,
   };
 }
 

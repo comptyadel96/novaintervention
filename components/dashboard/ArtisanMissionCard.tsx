@@ -20,6 +20,7 @@ import {
   MISSION_STATUS_LABELS,
   missionStatusClass,
 } from "@/lib/missions/labels";
+import { getErrorMessage } from "@/lib/api/errors";
 import DownloadInvoiceButton from "@/components/dashboard/DownloadInvoiceButton";
 import { MissionCommissionBreakdown } from "@/components/missions/MissionCommissionBreakdown";
 
@@ -35,7 +36,7 @@ export function ArtisanMissionCard({ mission, onUpdated }: Props) {
   );
   const [afterFile, setAfterFile] = useState<File | null>(null);
   const [afterPreview, setAfterPreview] = useState<string | null>(null);
-  const [enRouteSent, setEnRouteSent] = useState(false);
+  const [enRouteSent, setEnRouteSent] = useState(Boolean(mission.en_route_at));
   const [error, setError] = useState<string | null>(null);
 
   const refresh = () => {
@@ -50,7 +51,7 @@ export function ArtisanMissionCard({ mission, onUpdated }: Props) {
       await fn();
       refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
+      setError(getErrorMessage(e, "Erreur"));
     } finally {
       setLoading(null);
     }
@@ -168,17 +169,38 @@ export function ArtisanMissionCard({ mission, onUpdated }: Props) {
               <button
                 type="button"
                 disabled={!!loading}
-                onClick={() =>
-                  run("enroute", async () => {
-                    await clientMissionsApi.enRoute(mission.id);
+                onClick={async () => {
+                  setError(null);
+                  setLoading("enroute");
+                  try {
+                    const result = await clientMissionsApi.enRoute(mission.id);
                     setEnRouteSent(true);
-                  })
-                }
+                    onUpdated?.();
+                    if (result.clientNotified) {
+                      alert(
+                        result.message ??
+                          "Le client a été notifié que vous êtes en route.",
+                      );
+                    }
+                  } catch (e) {
+                    setError(getErrorMessage(e, "Erreur"));
+                  } finally {
+                    setLoading(null);
+                  }
+                }}
                 className="btn btn-outline btn-sm flex items-center gap-2"
               >
                 <Truck size={16} />
                 {loading === "enroute" ? "Envoi..." : "Je suis en route"}
               </button>
+            )}
+            {enRouteSent && (
+              <span className="text-xs font-bold text-green-700 px-3 py-2 rounded-xl bg-green-50 border border-green-200">
+                En route
+                {mission.en_route_at
+                  ? ` · ${new Date(mission.en_route_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
+                  : ""}
+              </span>
             )}
             <button
               type="button"

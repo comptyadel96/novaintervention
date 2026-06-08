@@ -259,7 +259,7 @@ export function ArtisanView({
         </aside>
       </div>
 
-      <ArtisanAccountingCharts />
+      <ArtisanAccountingCharts pendingRevenue={stats?.pendingRevenue} />
     </div>
   );
 }

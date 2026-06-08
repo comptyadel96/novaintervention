@@ -19,6 +19,11 @@ function parseFilters(searchParams: URLSearchParams) {
     role: searchParams.get("role") ?? undefined,
     status: (searchParams.get("status") as MissionStatus) ?? undefined,
     unassigned: searchParams.get("unassigned") === "true" ? "true" : undefined,
+    assignedOnly:
+      searchParams.get("assigned_only") === "true" ||
+      searchParams.get("assignedOnly") === "true"
+        ? "true"
+        : undefined,
     nearLat: searchParams.get("near_lat") ?? undefined,
     nearLng: searchParams.get("near_lng") ?? undefined,
     radiusKm: searchParams.get("radius_km") ?? undefined,
@@ -34,6 +39,7 @@ function buildQuery(filters: ReturnType<typeof parseFilters>) {
   if (filters.role) params.set("role", filters.role);
   if (filters.status) params.set("status", filters.status);
   if (filters.unassigned) params.set("unassigned", filters.unassigned);
+  if (filters.assignedOnly) params.set("assignedOnly", filters.assignedOnly);
   if (filters.nearLat) params.set("nearLat", filters.nearLat);
   if (filters.nearLng) params.set("nearLng", filters.nearLng);
   if (filters.radiusKm) params.set("radiusKm", filters.radiusKm);
@@ -88,6 +94,7 @@ export async function POST(request: Request) {
         mission: guest.mission,
         accountCreated: guest.accountCreated,
         autoLogin: Boolean(!token && guest.accessToken),
+        verificationEmailSent: guest.verificationEmailSent,
       },
       { status: 201 },
     );

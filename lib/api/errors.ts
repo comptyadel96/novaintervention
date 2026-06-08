@@ -42,6 +42,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: "Email ou mot de passe incorrect.",
   EMAIL_PHONE_MISMATCH:
     "Cet email et ce numéro de téléphone sont associés à des comptes différents. Connectez-vous ou contactez le support.",
+  CONFLICT:
+    "Cet email est déjà utilisé ou une candidature est déjà en cours.",
   SESSION_EXPIRED:
     "Votre session a expiré. Reconnectez-vous puis réessayez.",
 

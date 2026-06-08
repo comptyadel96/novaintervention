@@ -36,7 +36,11 @@ function formatBucket(bucket: string, period: AccountingPeriod): string {
   return d.getFullYear().toString();
 }
 
-export function ArtisanAccountingCharts() {
+export function ArtisanAccountingCharts({
+  pendingRevenue,
+}: {
+  pendingRevenue?: number;
+} = {}) {
   const [period, setPeriod] = useState<AccountingPeriod>("month");
   const [data, setData] = useState<ArtisanAccounting | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,8 +122,22 @@ export function ArtisanAccountingCharts() {
         </p>
       )}
       {!loading && !error && items.length === 0 && (
-        <p className="text-sm text-text-muted text-center py-8">
-          Aucune mission terminée sur cette période.
+        <div className="text-sm text-text-muted text-center py-8 space-y-2">
+          <p>Aucune mission terminée sur cette période.</p>
+          {pendingRevenue != null && pendingRevenue > 0 && (
+            <p className="text-primary-dk font-semibold">
+              Net estimé en cours : {pendingRevenue.toLocaleString("fr-FR")} €
+            </p>
+          )}
+        </div>
+      )}
+      {!loading && !error && items.length > 0 && pendingRevenue != null && pendingRevenue > 0 && (
+        <p className="text-xs text-text-muted mb-4">
+          Net estimé sur missions actives :{" "}
+          <span className="font-bold text-primary-dk">
+            {pendingRevenue.toLocaleString("fr-FR")} €
+          </span>{" "}
+          (non inclus dans le graphique — missions non terminées)
         </p>
       )}
       {!loading && !error && items.length > 0 && (

@@ -1,5 +1,6 @@
 import type {
   CreateMissionInput,
+  EnRouteMissionResponse,
   GuestMissionCreateResponse,
   Mission,
   MissionStatus,
@@ -50,6 +51,8 @@ function missionQuery(filters: {
   role?: string;
   status?: MissionStatus;
   unassigned?: boolean;
+  assigned_only?: boolean;
+  assignedOnly?: boolean;
   near_lat?: number;
   near_lng?: number;
   radius_km?: number;
@@ -62,6 +65,8 @@ function missionQuery(filters: {
   if (filters.role) params.set("role", filters.role);
   if (filters.status) params.set("status", filters.status);
   if (filters.unassigned) params.set("unassigned", "true");
+  if (filters.assigned_only || filters.assignedOnly)
+    params.set("assigned_only", "true");
   if (filters.near_lat != null)
     params.set("near_lat", String(filters.near_lat));
   if (filters.near_lng != null)
@@ -82,6 +87,8 @@ export const clientMissionsApi = {
       role?: string;
       status?: MissionStatus;
       unassigned?: boolean;
+      assigned_only?: boolean;
+      assignedOnly?: boolean;
       near_lat?: number;
       near_lng?: number;
       radius_km?: number;
@@ -119,7 +126,7 @@ export const clientMissionsApi = {
   },
 
   enRoute(id: string) {
-    return bffFetch<Mission>(`/api/missions/${id}/en-route`, {
+    return bffFetch<EnRouteMissionResponse>(`/api/missions/${id}/en-route`, {
       method: "POST",
     });
   },

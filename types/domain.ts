@@ -77,6 +77,7 @@ export interface Mission {
   scheduled_at?: string | null;
   created_at?: string;
   completed_at?: string;
+  en_route_at?: string | null;
   artisan?: Pick<Profile, "first_name" | "last_name">;
 }
 
@@ -88,6 +89,8 @@ export interface Session {
 export interface ArtisanStats {
   totalRevenue: number;
   totalGmv?: number;
+  pendingRevenue?: number;
+  pendingGmv?: number;
   monthlyRevenue: number;
   weeklyMissionsCount: number;
   activeClients: number;
@@ -259,6 +262,13 @@ export type GuestMissionCreateResponse = {
   mission: Mission;
   accountCreated?: boolean;
   autoLogin?: boolean;
+  verificationEmailSent?: boolean;
+};
+
+export type EnRouteMissionResponse = {
+  message?: string;
+  clientNotified?: boolean;
+  mission: Mission;
 };
 
 export interface RegisterInput {
