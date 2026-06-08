@@ -6,9 +6,9 @@ Aligné sur le backend `nova-backend/docs/FRONTEND_EMAIL_VERIFICATION.md`.
 
 | Route | Rôle |
 |-------|------|
-| `/verify-email?token=` | `POST /api/auth/verify-email` → BFF → backend |
+| `/verify-email?token=` | Par défaut : formulaire mot de passe + confirmation email. `?auto=1` : confirmation seule (inscription classique). |
 | Dashboard | Bannière + « Renvoyer l'email » si `user.emailVerified === false` |
-| `/demander` | Bouton de soumission désactivé tant que l'email n'est pas vérifié |
+| `/demander` | Parcours invité sans vérification email préalable |
 
 ## Session
 
@@ -26,4 +26,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Le backend utilise `FRONTEND_URL` pour générer le lien `…/verify-email?token=`.
+Le backend utilise `FRONTEND_URL` pour générer le lien :
+
+- **Compte invité (demande `/demander`)** : `…/verify-email?token={uuid}` — le front affiche le formulaire mot de passe.
+- **Inscription `/register`** : `…/verify-email?token={uuid}&auto=1` — confirmation email seule (mot de passe déjà choisi).

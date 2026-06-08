@@ -4,10 +4,13 @@ import { ApiError } from "@/lib/api/errors";
 
 export async function POST(request: Request) {
   try {
-    const { token } = (await request.json()) as { token: string };
+    const { token, password } = (await request.json()) as {
+      token: string;
+      password?: string;
+    };
     const data = await apiRequest<{ message?: string }>("/auth/verify-email", {
       method: "POST",
-      body: { token },
+      body: { token, ...(password ? { password } : {}) },
     });
     return NextResponse.json(data);
   } catch (error) {

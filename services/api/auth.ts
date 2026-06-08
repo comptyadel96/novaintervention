@@ -57,10 +57,10 @@ export const authApi = {
     });
   },
 
-  verifyEmail(token: string) {
+  verifyEmail(input: { token: string; password?: string }) {
     return bffFetch<{ message: string }>("/api/auth/verify-email", {
       method: "POST",
-      body: JSON.stringify({ token }),
+      body: JSON.stringify(input),
     });
   },
 

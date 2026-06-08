@@ -5,6 +5,19 @@ import {
 } from "@/lib/auth/cookies";
 
 export function middleware(request: NextRequest) {
+  const token = request.nextUrl.searchParams.get("token");
+  const path = request.nextUrl.pathname;
+
+  if (
+    token &&
+    path !== "/verify-email" &&
+    path !== "/reset-password"
+  ) {
+    const url = new URL("/verify-email", request.url);
+    url.searchParams.set("token", token);
+    return NextResponse.redirect(url);
+  }
+
   const hasAccess = Boolean(request.cookies.get(ACCESS_TOKEN_COOKIE)?.value);
   const hasRefresh = Boolean(request.cookies.get(REFRESH_TOKEN_COOKIE)?.value);
   const hasSession = hasAccess || hasRefresh;

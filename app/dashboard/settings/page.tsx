@@ -28,7 +28,18 @@ export default async function DashboardSettingsPage() {
       <section className="card p-8 bg-white border border-border rounded-4xl shadow-sm space-y-10">
         <GoogleAccountLink user={session.user} />
         <hr className="border-border" />
-        {session.user.hasPassword === false ? (
+        {session.user.hasPassword === false &&
+        session.user.authProvider === "guest" ? (
+          <p className="text-sm text-text-muted">
+            Votre compte a été créé lors de votre demande d&apos;intervention.
+            Consultez l&apos;email reçu pour choisir votre mot de passe et vous
+            connecter. Sinon, utilisez{" "}
+            <a href="/forgot-password" className="text-primary font-semibold underline">
+              mot de passe oublié
+            </a>{" "}
+            avec la même adresse email.
+          </p>
+        ) : session.user.hasPassword === false ? (
           <p className="text-sm text-text-muted">
             Ce compte n&apos;a pas de mot de passe local (connexion Google).
             Associez Google ci-dessus ou contactez le support pour ajouter un mot

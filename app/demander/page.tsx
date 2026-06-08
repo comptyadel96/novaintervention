@@ -8,6 +8,7 @@ import { fetchAiPhotoStatus } from "@/services/api/ai-photo";
 import type { AnalyzePhotoMeta, AnalyzePhotoResult } from "@/types";
 import { formatAiInterventionType } from "@/lib/ai/intervention-labels";
 import { isIndicativeEstimate } from "@/lib/ai/analysis-meta";
+import { shouldSuggestMoreDetails, isUrgentIntervention } from "@/lib/ai/urgency";
 import { clientMissionsApi, clientUploadsApi } from "@/services/api/client";
 import { authApi } from "@/services/api/auth";
 import { getErrorMessage } from "@/lib/api/errors";
@@ -20,6 +21,16 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 
 const steps = ["Photo", "Estimation", "Coordonnées", "Confirmation"];
+
+function buildMissionDescription(
+  iaDescription: string,
+  context: string,
+  extra: string,
+): string {
+  return [extra.trim(), context.trim(), iaDescription]
+    .filter(Boolean)
+    .join(" — ");
+}
 
 export default function DemanderPage() {
   const router = useRouter();
@@ -235,7 +246,11 @@ export default function DemanderPage() {
         customer_phone: formData.phone,
         location: formData.address,
         city: cityHint ?? undefined,
-        description: extraDesc || iaResult.description_probleme,
+        description: buildMissionDescription(
+          iaResult.description_probleme,
+          photoContext,
+          extraDesc,
+        ),
         price: iaResult.estimation_prix_max,
         priceEstimate: iaResult.estimation_prix_max,
         ...(publicUrl ? { photo_url: publicUrl } : {}),
@@ -502,24 +517,34 @@ export default function DemanderPage() {
                 </div>
               )}
 
-              {/* Règle Métier : Si confidence < 0.6, afficher le champ supplémentaire */}
-              {iaResult.confidence < 0.6 && (
-                <div className="mb-8 p-4 rounded-xl bg-orange-50 border border-orange-200">
-                  <label className="block text-sm font-bold text-orange-900 mb-2">Pour affiner l&apos;estimation, décrivez davantage le problème :</label>
-                  <textarea 
-                    className="form-input bg-white border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3 min-h-[80px]" 
-                    placeholder="Mon évier fuit par le dessous depuis ce matin..."
+              {shouldSuggestMoreDetails(
+                iaResult.confidence,
+                iaResult.niveau_urgence,
+              ) && (
+                <div className="mb-8 p-4 rounded-xl bg-bg-alt border border-border">
+                  <label className="block text-sm font-semibold text-primary-dk mb-2">
+                    Précisions supplémentaires{" "}
+                    <span className="font-normal text-text-muted">(optionnel)</span>
+                  </label>
+                  <p className="text-xs text-text-muted mb-2">
+                    L&apos;artisan affinera le diagnostic sur place — vous pouvez
+                    continuer sans remplir ce champ.
+                  </p>
+                  <textarea
+                    className="form-input bg-white border border-border text-primary-dk rounded-xl focus:ring-primary w-full px-4 py-3 min-h-[80px]"
+                    placeholder="Ex. fuite active, vanne d'arrêt inaccessible…"
                     value={extraDesc}
                     onChange={(e) => setExtraDesc(e.target.value)}
-                    required
                   />
                 </div>
               )}
 
               <div className="flex gap-4 mt-6">
                 <button onClick={() => setStep(0)} className="btn bg-bg-alt border border-border text-text-muted hover:border-primary-lt w-1/3 justify-center">Retour</button>
-                <button onClick={() => setStep(2)} className="btn btn-primary flex-1 justify-center" disabled={iaResult.confidence < 0.6 && extraDesc.trim().length === 0}>
-                  Confirmer le Bilan
+                <button onClick={() => setStep(2)} className="btn btn-primary flex-1 justify-center">
+                  {isUrgentIntervention(iaResult.niveau_urgence)
+                    ? "Continuer — urgence"
+                    : "Confirmer le Bilan"}
                 </button>
               </div>
             </div>
@@ -569,13 +594,13 @@ export default function DemanderPage() {
               </p>
               {accountCreated && (
                 <p className="text-sm text-text-muted mb-6 max-w-md mx-auto">
-                  Votre espace client a été créé. Un email de confirmation a
-                  été envoyé à{" "}
+                  Un email a été envoyé à{" "}
                   <span className="font-semibold text-primary-dk">
                     {formData.email}
                   </span>
-                  . Cliquez sur le lien pour activer votre compte et définir un
-                  mot de passe.
+                  . Cliquez sur le lien pour{" "}
+                  <strong>choisir votre mot de passe</strong> et activer votre
+                  compte. Vous pourrez ensuite vous connecter avec votre email.
                 </p>
               )}
               <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">

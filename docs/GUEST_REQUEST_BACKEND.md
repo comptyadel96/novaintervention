@@ -240,11 +240,27 @@ Réutiliser le flux existant (`POST /auth/register` / `sendVerificationEmail`) :
 
 | Événement | Email |
 |-----------|--------|
-| Compte invité créé | **Confirmation compte** — lien `GET /verify-email?token=…` |
+| Compte invité créé | **Activation compte** — lien `…/verify-email?token=…` (formulaire mot de passe côté front) |
 | Mission créée | *(optionnel P2)* **Récap demande** — n° mission, estimation, délai |
 
-**Objet suggéré :** « Confirmez votre compte Nova Intervention »  
-**Contenu :** prénom, n° de demande, lien vérification (24–48 h), mention qu'un artisan va les contacter au téléphone.
+**Lien email invité :**
+
+```
+https://novaintervention.com/verify-email?token={uuid}
+```
+
+(Pas besoin de `setup=1` — le front affiche toujours le formulaire mot de passe sauf si `auto=1`.)
+
+**Endpoint :** `POST /api/v1/auth/verify-email`
+
+```json
+{ "token": "uuid", "password": "minimum8chars" }
+```
+
+- Avec `password` : enregistre le mot de passe, `emailVerified = true`, compte activé.
+- Sans `password` (inscription classique) : confirme l'email seulement.
+
+**Objet suggéré :** « Activez votre compte Nova Intervention »
 
 Variables SMTP : `EMAIL_FROM`, `SMTP_*` (déjà documentés dans `README_BACKEND.md`).
 
@@ -255,7 +271,7 @@ Variables SMTP : `EMAIL_FROM`, `SMTP_*` (déjà documentés dans `README_BACKEND
 | Étape | Action |
 |-------|--------|
 | À la création | Compte avec email + téléphone, sans mot de passe |
-| Email immédiat | Lien vérification → `/verify-email` puis définition mot de passe |
+| Email immédiat | Lien `verify-email?token=…` → choix du mot de passe + confirmation email |
 | SMS (optionnel P1) | Lien de suivi mission par SMS en complément |
 | Plus tard | Connexion email/mot de passe ou SMS |
 
@@ -296,7 +312,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS users_phone_unique
 - [ ] `POST /missions` accepte les requêtes **sans JWT**
 - [ ] `customerEmail` obligatoire en mode invité
 - [ ] `findOrCreate` client par `phone` **ou** `email` (gestion conflit)
-- [ ] Envoi email vérification à la création (`sendVerificationEmail`)
+- [ ] Lien email invité : `…/verify-email?token={uuid}`
+- [ ] `POST /auth/verify-email` accepte `{ token, password }` (confirme email + enregistre mot de passe)
+- [ ] Si email déjà vérifié : accepter `{ token, password }` via `reset-password` ou même endpoint
 - [ ] Réponse avec `mission` + `accessToken` + `refreshToken` + `accountCreated`
 - [ ] Routes IA + upload **publiques** (rate-limit)
 - [ ] Dispatch WS `mission.offer` inchangé
