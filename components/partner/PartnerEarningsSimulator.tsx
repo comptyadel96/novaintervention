@@ -57,17 +57,14 @@ export function PartnerEarningsSimulator({ cityHint }: Props) {
   const commissionPct = Math.round(commissionRate * 100);
 
   return (
-    <section className="mb-24">
-      <div className="bg-primary-dk rounded-[2.5rem] p-8 md:p-14 text-white shadow-2xl relative overflow-hidden">
+    <section className="mb-8 w-full">
+      <div className="bg-primary-dk rounded-[1.5rem] md:rounded-[2rem] p-8 md:p-12 lg:p-14 text-white shadow-2xl relative overflow-hidden w-full">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary opacity-20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary-lt opacity-10 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2" />
 
-        <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
           <div>
-            <h2
-              className="text-3xl md:text-4xl font-extrabold mb-6"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
+            <h2 className="page-h2 text-white mb-6" style={{ color: "#fff" }}>
               Simulez vos revenus mensuels
             </h2>
             <p className="text-white/70 text-lg mb-6 leading-relaxed">

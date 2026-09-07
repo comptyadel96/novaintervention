@@ -1,60 +1,73 @@
-/* Devenir partenaire — hero & avantages (aligné maquette capture) */
+/* Devenir partenaire — hero & avantages */
 
 .partner-hero {
   --partner-hero-blue: #2874b8;
   --partner-hero-blue-dark: #1e5f9e;
-  background: var(--partner-hero-blue);
-  margin-top: -5.5rem;
-  padding: calc(5.5rem + 2.5rem) 0 3rem;
-  overflow: hidden;
+  background: transparent;
+  margin-top: 0;
+  padding: 2rem 1.5rem 1.5rem;
+  overflow: visible;
 }
 
 .partner-hero__inner {
-  max-width: 1140px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 2rem 1.5rem 0;
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
   align-items: center;
+  background: var(--partner-hero-blue);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(11, 58, 107, 0.18);
 }
 
 @media (min-width: 992px) {
   .partner-hero__inner {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.05fr 0.95fr;
     gap: 1.5rem 2.5rem;
-    min-height: 380px;
+    min-height: 400px;
+    padding: 2.5rem 2.5rem 0;
   }
 }
 
 .partner-hero__content {
   color: #fff;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: 992px) {
+  .partner-hero__content {
+    padding-bottom: 2.5rem;
+  }
 }
 
 .partner-hero__eyebrow {
   display: block;
   font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.9);
   margin: 0 0 1.25rem;
   font-family: var(--font-sans);
 }
 
 .partner-hero__title {
-  font-size: clamp(1.75rem, 4vw, 2.375rem);
-  font-weight: 700;
-  line-height: 1.22;
+  font-size: var(--heading-h1);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
   color: #fff;
   margin: 0 0 1.5rem;
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
 }
 
 .partner-hero__text {
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 1.55;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.95);
   margin: 0 0 0.65rem;
   font-family: var(--font-sans);
 }
@@ -131,18 +144,19 @@
 }
 
 .partner-why__inner {
-  max-width: 1140px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
 
 .partner-why__title {
-  font-size: clamp(1.75rem, 3.5vw, 2.125rem);
-  font-weight: 700;
+  font-size: var(--heading-h2);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: #0b3a6b;
   text-align: center;
   margin: 0 0 2.25rem;
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
 }
 
 .partner-why__grid {
@@ -165,7 +179,7 @@
   padding: 1.25rem 1.375rem;
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 1.5rem;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
@@ -192,12 +206,12 @@
 }
 
 .partner-why__card-title {
-  font-size: 1rem;
+  font-size: var(--heading-h3);
   font-weight: 700;
   color: #0b3a6b;
   margin: 0 0 0.35rem;
   line-height: 1.35;
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
 }
 
 .partner-why__card-desc {
@@ -208,7 +222,7 @@
   font-family: var(--font-sans);
 }
 
-/* ——— Zone formulaire (sous la maquette) ——— */
+/* ——— Zone formulaire + simulateur ——— */
 
 .partner-form-section {
   background: #f4f6fa;
@@ -216,7 +230,7 @@
 }
 
 .partner-form-section__inner {
-  max-width: 1140px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
   display: grid;
@@ -225,20 +239,16 @@
   align-items: start;
 }
 
-@media (min-width: 992px) {
-  .partner-form-section__inner {
-    grid-template-columns: 1fr 1.1fr;
-    gap: 2.5rem;
-  }
-}
-
+/* Simulateur pleine largeur, formulaire en dessous */
 .partner-form-section__simulator {
   margin-bottom: 0;
+  width: 100%;
 }
 
 .partner-form-section__form-wrap {
-  max-width: none;
-  margin: 0;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .partner-form-grid {

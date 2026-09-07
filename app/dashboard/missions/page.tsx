@@ -18,10 +18,7 @@ export default async function DashboardMissionsPage() {
           <p className="text-primary font-bold uppercase tracking-widest text-xs mb-2">
             Missions
           </p>
-          <h1
-            className="text-4xl font-extrabold text-primary-dk tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <h1 className="page-title mb-0">
             Mes interventions
           </h1>
           <p className="mt-3 text-sm text-text-muted max-w-2xl">

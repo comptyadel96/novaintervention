@@ -78,16 +78,10 @@ export default function LoginPage() {
       <div className="auth-wrap flex-1 flex items-center justify-center py-12 px-4">
         <div className="auth-box w-full max-w-md">
           <div className="auth-box__header text-center mb-8">
-            <p
-              className="text-xl font-extrabold text-primary-dk mb-1"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
+            <p className="page-h3 text-primary-dk mb-1">
               Nova <span className="text-primary">Intervention</span>
             </p>
-            <h1
-              className="text-2xl font-extrabold text-primary-dk mb-2"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
+            <h1 className="page-title mb-2">
               Connexion
             </h1>
             <p className="text-sm text-text-muted">

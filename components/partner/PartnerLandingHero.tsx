@@ -10,7 +10,7 @@ export function PartnerLandingHero() {
   const [imageFailed, setImageFailed] = useState(false);
 
   return (
-    <section className="partner-hero md:w-2/3 w-full mx-auto" aria-labelledby="partner-hero-title">
+    <section className="partner-hero w-full" aria-labelledby="partner-hero-title">
       <div className="partner-hero__inner">
         <div className="partner-hero__content">
           <span className="partner-hero__eyebrow">Devenir partenaire</span>

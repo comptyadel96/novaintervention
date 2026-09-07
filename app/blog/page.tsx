@@ -70,7 +70,7 @@ export default function BlogPage() {
         <div className="absolute inset-0 z-0 bg-dots opacity-50"></div>
         <div className="container relative z-10">
           <p className="text-sm font-bold tracking-widest uppercase text-primary mb-3">Actualités & Guides</p>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-primary-dk mb-4" style={{ fontFamily: "var(--font-display)" }}>
+          <h1 className="page-title">
             Conseils plomberie
           </h1>
           <p className="text-lg text-text-muted max-w-2xl leading-relaxed">

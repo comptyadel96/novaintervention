@@ -38,7 +38,7 @@ export default function DebouchagePage() {
             <span className="text-primary-dk">Débouchage</span>
           </nav>
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-primary-dk mb-4" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="page-title">
               Débouchage professionnel et assainissement
             </h1>
             <p className="text-lg text-text-muted leading-relaxed">
@@ -92,7 +92,7 @@ export default function DebouchagePage() {
 
           <aside className="space-y-8">
             <div className="card-mid !bg-primary !border-transparent sticky top-28">
-              <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-display)" }}>Intervention Urgente !</h3>
+              <h3 className="page-h3 text-white mb-2" style={{ color: "#fff" }}>Intervention Urgente !</h3>
               <p className="text-white/80 text-sm mb-6 leading-relaxed">
                 Nos techniciens sont qualifiés. Contactez-nous dès maintenant.
               </p>

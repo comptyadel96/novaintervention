@@ -146,10 +146,7 @@ export default function ContactPage() {
           <p className="text-sm font-bold tracking-widest uppercase text-primary mb-3">
             Service Client
           </p>
-          <h1
-            className="text-4xl md:text-5xl font-extrabold text-primary-dk mb-4"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <h1 className="page-title">
             Contactez-nous
           </h1>
           <p className="text-lg text-text-muted max-w-2xl leading-relaxed">

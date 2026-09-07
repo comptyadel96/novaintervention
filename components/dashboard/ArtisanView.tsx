@@ -42,12 +42,11 @@ export function ArtisanView({
           <p className="text-primary font-bold uppercase tracking-widest text-xs mb-2">
             Tableau de bord Artisan
           </p>
-          <h1
-            className="text-4xl font-extrabold text-primary-dk tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Bonjour, {displayFirstName(user, profile)}
-          </h1>
+            <h1
+              className="page-title mb-0"
+            >
+              Bonjour, {displayFirstName(user, profile)}
+            </h1>
           <p className="mt-3 text-sm text-text-muted max-w-2xl">
             Votre tableau de bord vous permet de suivre vos interventions, vos
             clients et vos revenus en un coup d'œil.

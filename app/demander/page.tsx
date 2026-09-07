@@ -289,7 +289,7 @@ export default function DemanderPage() {
 
         {/* Subheader */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-primary-dk mb-4" style={{ fontFamily: "var(--font-display)" }}>
+          <h1 className="page-title">
             Demande d'intervention
           </h1>
           <p className="text-text-muted">Réponse estimée &lt; 30 minutes. Zone d'intervention premium.</p>

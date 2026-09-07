@@ -85,8 +85,7 @@ export function ClientView({
               Espace Client • Carnet Nova
             </p>
             <h1
-              className="text-4xl font-extrabold text-primary-dk tracking-tight"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="page-title mb-0"
             >
               Ravi de vous revoir, {displayName}
             </h1>

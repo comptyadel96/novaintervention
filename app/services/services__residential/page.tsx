@@ -39,7 +39,7 @@ export default function ResidentialPage() {
             <span className="text-primary-dk">Réparation & Fuite</span>
           </nav>
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-primary-dk mb-4" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="page-title">
               Fuites et réparations plomberie, résolues rapidement
             </h1>
             <p className="text-lg text-text-muted leading-relaxed">
@@ -93,7 +93,7 @@ export default function ResidentialPage() {
 
           <aside className="space-y-8">
             <div className="card-mid !bg-primary !border-transparent sticky top-28">
-              <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-display)" }}>Réservez un pro !</h3>
+              <h3 className="page-h3 text-white mb-2" style={{ color: "#fff" }}>Réservez un pro !</h3>
               <p className="text-white/80 text-sm mb-6 leading-relaxed">
                 Appelez nos techniciens disponibles immédiatement pour un dépannage ou un entretien.
               </p>

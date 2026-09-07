@@ -34,8 +34,7 @@ export default async function DashboardPlanningPage() {
             Planning
           </p>
           <h1
-            className="text-4xl font-extrabold text-primary-dk tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="page-title mb-0"
           >
             Agenda des interventions
           </h1>

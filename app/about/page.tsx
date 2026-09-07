@@ -35,7 +35,7 @@ export default function AboutPage() {
             <span className="text-primary-dk">À propos</span>
           </nav>
           <div className="max-w-4xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-primary-dk mb-4" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="page-title">
               La plateforme qui digitalise le marché des services à domicile
             </h1>
             <p className="text-lg text-text-muted leading-relaxed max-w-3xl">

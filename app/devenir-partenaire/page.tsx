@@ -105,7 +105,7 @@ export default function DevenirPartenairePage() {
               <div className="bg-bg-alt px-8 py-6 border-b border-border">
                 <h2
                   id="partner-form-heading"
-                  className="text-2xl font-bold text-primary-dk mb-1"
+                  className="page-h2 mb-1"
                 >
                   Postulez maintenant
                 </h2>

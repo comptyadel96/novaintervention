@@ -18,8 +18,7 @@ export default async function ClientRequestsPage() {
             Suivi des interventions
           </p>
           <h1
-            className="text-4xl font-extrabold text-primary-dk tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="page-title mb-0"
           >
             Mes demandes
           </h1>

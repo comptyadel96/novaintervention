@@ -133,10 +133,7 @@ export function AdminView({
           <p className="text-red-600 font-bold uppercase tracking-widest text-xs mb-2">
             Admin · Commission {(rate * 100).toFixed(0)} %
           </p>
-          <h1
-            className="text-4xl font-extrabold text-primary-dk tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <h1 className="page-title mb-0">
             Tour de contrôle Nova
           </h1>
         </div>
