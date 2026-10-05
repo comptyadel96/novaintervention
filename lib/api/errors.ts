@@ -103,6 +103,17 @@ const ERROR_MESSAGES: Record<string, string> = {
 
     "Mission introuvable ou endpoint backend non disponible.",
 
+  BUILDING_NOT_FOUND:
+    "Passeport introuvable, ou vous n'y avez plus accès.",
+  BUILDING_ALREADY_LINKED:
+    "Ce bâtiment est déjà rattaché à votre compte.",
+  EQUIPMENT_NOT_FOUND: "Équipement introuvable.",
+  DOCUMENT_NOT_FOUND: "Document introuvable.",
+  TRANSFER_TARGET_NOT_FOUND:
+    "Aucun compte Nova ne correspond à cet email. Le nouveau propriétaire doit créer son compte avant le transfert.",
+  TRANSFER_TARGET_INVALID:
+    "Vous ne pouvez pas transférer ce passeport à vous-même.",
+
 };
 
 
@@ -143,9 +154,15 @@ export function getErrorMessage(error: unknown, fallback: string): string {
     }
 
     if (error.code && ERROR_MESSAGES[error.code]) {
-
-      return ERROR_MESSAGES[error.code];
-
+      const mapped = ERROR_MESSAGES[error.code];
+      if (
+        (error.code === "FORBIDDEN" || error.code === "NOT_FOUND") &&
+        error.message.trim() &&
+        error.message.trim() !== mapped
+      ) {
+        return error.message;
+      }
+      return mapped;
     }
 
     if (isBannedError(error)) return ERROR_MESSAGES.ACCOUNT_BANNED;

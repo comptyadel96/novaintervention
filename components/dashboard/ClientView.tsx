@@ -3,6 +3,7 @@
 import { History, FileText, Calendar, ShieldCheck, MapPin, Mail, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clientMissionsApi, clientClientsApi } from "@/services/api/client";
+import { ClientHomeActions } from "@/components/dashboard/ClientHomeActions";
 import { MissionCommissionBreakdown } from "@/components/missions/MissionCommissionBreakdown";
 import Link from "next/link";
 import { generateInvoicePDF } from "@/lib/pdf/invoice-generator";
@@ -114,6 +115,8 @@ export function ClientView({
           </div>
         </div>
       </header>
+
+      <ClientHomeActions missions={missions} />
 
       {missions.filter((m) => m.status === "waiting_confirmation").length > 0 && (
         <section className="animate-in fade-in slide-in-from-top-4 duration-700">

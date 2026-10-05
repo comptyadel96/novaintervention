@@ -56,3 +56,57 @@ export async function apiRequest<T>(
 
   return response.json() as Promise<T>;
 }
+
+export type ApiBinaryResult = {
+  body: ArrayBuffer;
+  contentType: string;
+  contentDisposition: string | null;
+};
+
+/** Appel authentifié dont le corps n'est pas forcément du JSON (export PDF). */
+export async function apiRequestBuffer(
+  path: string,
+  options: ApiRequestOptions = {},
+): Promise<ApiBinaryResult> {
+  const { method = "GET", body, token, headers = {}, isFormData } = options;
+  const url = `${getApiBaseUrl()}${API_PREFIX}${path}`;
+
+  const requestHeaders: Record<string, string> = { ...headers };
+  if (token) {
+    requestHeaders.Authorization = `Bearer ${token}`;
+  }
+  if (body !== undefined && !isFormData) {
+    requestHeaders["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(url, {
+    method,
+    headers: requestHeaders,
+    body:
+      body === undefined
+        ? undefined
+        : isFormData
+          ? (body as FormData)
+          : JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let message = `Erreur API (${response.status})`;
+    let code: string | undefined;
+    try {
+      const payload = await response.json();
+      message = payload.message ?? payload.error ?? message;
+      code = payload.code;
+    } catch {
+      // corps non JSON
+    }
+    throw new ApiError(message, response.status, code);
+  }
+
+  return {
+    body: await response.arrayBuffer(),
+    contentType: response.headers.get("content-type") ?? "application/octet-stream",
+    contentDisposition: response.headers.get("content-disposition"),
+  };
+}

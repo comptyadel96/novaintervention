@@ -22,6 +22,33 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const steps = ["Photo", "Estimation", "Coordonnées", "Confirmation"];
 
+/** Parcours d'entrée du blueprint : urgence, entretien, projet. */
+const INTENT_PRESETS = {
+  urgence: {
+    title: "Décrivez l'urgence",
+    hint: "Réponse estimée en moins de 30 minutes.",
+    mode: "photo" as const,
+  },
+  entretien: {
+    title: "Planifions votre entretien",
+    hint: "Entretien annuel, contrôle, révision d'équipement.",
+    mode: "text" as const,
+  },
+  projet: {
+    title: "Parlez-nous de votre projet",
+    hint: "Installation, remplacement ou travaux à chiffrer.",
+    mode: "text" as const,
+  },
+} as const;
+
+type DemandeIntent = keyof typeof INTENT_PRESETS;
+
+function readIntent(): DemandeIntent | null {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("intent");
+  return value && value in INTENT_PRESETS ? (value as DemandeIntent) : null;
+}
+
 function buildMissionDescription(
   iaDescription: string,
   context: string,
@@ -51,6 +78,7 @@ export default function DemanderPage() {
     "ai_photo" | "text_manual" | "mixed" | null
   >(null);
   const [inputMode, setInputMode] = useState<"photo" | "text">("photo");
+  const [intent, setIntent] = useState<DemandeIntent | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [aiStatus, setAiStatus] = useState<{
     enabled: boolean;
@@ -106,6 +134,12 @@ export default function DemanderPage() {
     fetchAiPhotoStatus()
       .then(setAiStatus)
       .catch(() => setAiStatus({ enabled: false }));
+
+    const currentIntent = readIntent();
+    if (currentIntent) {
+      setIntent(currentIntent);
+      setInputMode(INTENT_PRESETS[currentIntent].mode);
+    }
   }, [router]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,8 +357,11 @@ export default function DemanderPage() {
           {step === 0 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Étape 1 sur 3</span>
-              <h2 className="text-2xl font-bold text-primary-dk mb-4">Décrivez l&apos;urgence</h2>
+              <h2 className="text-2xl font-bold text-primary-dk mb-4">
+                {intent ? INTENT_PRESETS[intent].title : "Décrivez l'urgence"}
+              </h2>
               <p className="text-sm text-text-muted mb-6 leading-relaxed">
+                {intent && `${INTENT_PRESETS[intent].hint} `}
                 Ajoutez une photo ou décrivez le problème : nous estimons le type
                 d&apos;intervention, l&apos;urgence et une fourchette de prix indicative.
               </p>

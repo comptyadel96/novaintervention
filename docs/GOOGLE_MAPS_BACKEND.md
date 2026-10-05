@@ -15,7 +15,12 @@ APIs à activer dans Google Cloud (même clé, restriction par referrer) :
 - Geocoding API
 - Directions API
 
-Referrers autorisés : `http://localhost:3000/*`, `https://novaintervention.vercel.app/*`
+Referrers HTTP (restriction de la clé Maps) à autoriser **tous** :
+
+- `http://localhost:3000/*`
+- `https://novaintervention.com/*`
+- `https://www.novaintervention.com/*`
+- `https://novaintervention.vercel.app/*`
 
 ---
 

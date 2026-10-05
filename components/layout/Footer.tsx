@@ -11,6 +11,7 @@ export function Footer() {
             <div className="site-footer__links">
               <Link href="/"           className="site-footer__link">Accueil</Link>
               <Link href="/about"      className="site-footer__link">À propos</Link>
+              <Link href="/passeport"  className="site-footer__link">Passeport Nova</Link>
               <Link href="/blog"       className="site-footer__link">Blog</Link>
               <Link href="/contact-us" className="site-footer__link">Contact</Link>
             </div>

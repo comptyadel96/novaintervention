@@ -95,6 +95,9 @@ export function Header() {
             )}
           </div>
 
+          <Link href="/passeport" className="nav-link">
+            Passeport
+          </Link>
           <Link href="/blog" className="nav-link">
             Blog
           </Link>
@@ -161,6 +164,7 @@ export function Header() {
           {[
             { href: "/", label: "Accueil" },
             { href: "/about", label: "À propos" },
+            { href: "/passeport", label: "Passeport" },
             { href: "/blog", label: "Blog" },
             { href: "/contact-us", label: "Contact" },
           ].map((item) => (

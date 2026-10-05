@@ -10,12 +10,14 @@ export const GOOGLE_MAP_LIBRARIES = [
 ] as const;
 
 export function getGoogleMapsApiKey(): string | undefined {
-  return process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim();
+  return key || undefined;
 }
 
 /** Map ID Cloud Console (recommandé pour Advanced Markers). Optionnel. */
 export function getGoogleMapId(): string | undefined {
-  return process.env.NEXT_PUBLIC_GOOGLE_MAP_ID;
+  const id = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID?.trim();
+  return id || undefined;
 }
 
 export function isGoogleMapsConfigured(): boolean {

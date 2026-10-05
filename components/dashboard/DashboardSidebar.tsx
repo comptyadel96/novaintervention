@@ -9,6 +9,7 @@ import {
   Settings, 
   Briefcase, 
   History,
+  BookMarked,
   LogOut,
   Shield,
 } from "lucide-react";
@@ -48,6 +49,11 @@ export function DashboardSidebar({ role }: SidebarProps) {
         : [
             { label: "Carnet Nova", href: "/dashboard", icon: History },
             {
+              label: "Passeport",
+              href: "/dashboard/passeport",
+              icon: BookMarked,
+            },
+            {
               label: "Mes Demandes",
               href: "/dashboard/requests",
               icon: ClipboardList,
@@ -66,7 +72,10 @@ export function DashboardSidebar({ role }: SidebarProps) {
 
       <nav className="flex-1 px-4 py-4 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/dashboard" &&
+              pathname.startsWith(`${item.href}/`));
           return (
             <Link
               key={item.href}

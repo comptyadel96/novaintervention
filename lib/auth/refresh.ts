@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { apiRequest } from "@/lib/api/client";
+import { apiRequest, apiRequestBuffer, type ApiBinaryResult } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import {
   ACCESS_TOKEN_COOKIE,
@@ -61,6 +61,25 @@ export async function apiRequestWithAuth<T>(
       token = await refreshAccessToken();
       if (!token) throw error;
       return await apiRequest<T>(path, { ...options, token });
+    }
+    throw error;
+  }
+}
+
+export async function apiRequestWithAuthBuffer(
+  path: string,
+  options: Parameters<typeof apiRequestBuffer>[1] = {},
+): Promise<ApiBinaryResult> {
+  const cookieStore = await cookies();
+  let token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
+
+  try {
+    return await apiRequestBuffer(path, { ...options, token });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      token = await refreshAccessToken();
+      if (!token) throw error;
+      return await apiRequestBuffer(path, { ...options, token });
     }
     throw error;
   }
