@@ -27,7 +27,7 @@ export interface AnalyzePhotoResult {
 }
 
 export interface AnalyzePhotoMeta {
-  source: "openai" | "mock" | "fallback" | "manual";
+  source: "openai" | "deepseek" | "mock" | "fallback" | "manual";
   model?: string;
   fallbackReason?: string;
 }

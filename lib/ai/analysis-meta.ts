@@ -1,4 +1,9 @@
-export type AnalyzePhotoSource = "openai" | "mock" | "fallback" | "manual";
+export type AnalyzePhotoSource =
+  | "openai"
+  | "deepseek"
+  | "mock"
+  | "fallback"
+  | "manual";
 
 export type AnalyzePhotoMeta = {
   source: AnalyzePhotoSource;
@@ -18,7 +23,8 @@ export function parseAnalyzePhotoMeta(payload: unknown): AnalyzePhotoMeta {
     rawSource === "mock" ||
     rawSource === "fallback" ||
     rawSource === "manual" ||
-    rawSource === "openai"
+    rawSource === "openai" ||
+    rawSource === "deepseek"
       ? rawSource
       : "openai";
 
@@ -35,5 +41,8 @@ export function parseAnalyzePhotoMeta(payload: unknown): AnalyzePhotoMeta {
 }
 
 export function isIndicativeEstimate(meta: AnalyzePhotoMeta): boolean {
-  return meta.source !== "openai" || meta.fallbackReason != null;
+  return (
+    (meta.source !== "openai" && meta.source !== "deepseek") ||
+    meta.fallbackReason != null
+  );
 }
