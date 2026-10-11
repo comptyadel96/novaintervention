@@ -10,6 +10,10 @@ import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { requestBrowserPosition } from "@/lib/maps/browser-geolocation";
 import type { LatLng } from "@/lib/maps/config";
 import {
+  formatGpsFallbackAddress,
+  isGpsFallbackAddress,
+} from "@/lib/maps/geo";
+import {
   validateAddress,
   validateEmail,
   validateName,
@@ -68,9 +72,9 @@ function DemanderCoordinatesForm({
       setIsResolvingAddress(false);
       if (result) {
         setFormData((prev) =>
-          prev.address.trim()
-            ? prev
-            : { ...prev, address: result.formattedAddress },
+          !prev.address.trim() || isGpsFallbackAddress(prev.address)
+            ? { ...prev, address: result.formattedAddress }
+            : prev,
         );
         if (result.city) setCityHint(result.city);
       }
@@ -88,6 +92,11 @@ function DemanderCoordinatesForm({
     try {
       const nextCoords = await requestBrowserPosition();
       setCoords(nextCoords);
+      setFormData((prev) =>
+        prev.address.trim()
+          ? prev
+          : { ...prev, address: formatGpsFallbackAddress(nextCoords) },
+      );
       await applyReverse(nextCoords);
     } catch (err) {
       setFieldErrors((prev) => ({
@@ -336,13 +345,17 @@ export function validateDemanderCoordinates(
   const lastNameCheck = validateName(formData.lastName, "nom");
   const emailCheck = validateEmail(formData.email);
   const phoneCheck = validatePhone(formData.phone);
-  const addressCheck = validateAddress(formData.address);
+  const hasGps = coords != null && Number.isFinite(coords.lat) && Number.isFinite(coords.lng);
+  const addressCheck = validateAddress(
+    formData.address.trim() ||
+      (hasGps ? formatGpsFallbackAddress(coords) : ""),
+  );
   if (!firstNameCheck.valid) errors.firstName = firstNameCheck.message!;
   if (!lastNameCheck.valid) errors.lastName = lastNameCheck.message!;
   if (!emailCheck.valid) errors.email = emailCheck.message!;
   if (!phoneCheck.valid) errors.phone = phoneCheck.message!;
-  if (!addressCheck.valid) errors.address = addressCheck.message!;
-  if (!coords?.lat || !coords?.lng) {
+  if (!addressCheck.valid && !hasGps) errors.address = addressCheck.message!;
+  if (!hasGps) {
     errors.location =
       "Indiquez une adresse (suggestion Google), validez-la ou utilisez la géolocalisation.";
   }

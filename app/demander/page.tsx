@@ -11,6 +11,7 @@ import {
 import { fetchAiPhotoStatus } from "@/services/api/ai-photo";
 import type { AnalyzePhotoMeta, AnalyzePhotoResult } from "@/types";
 import { formatAiInterventionType } from "@/lib/ai/intervention-labels";
+import { formatGpsFallbackAddress } from "@/lib/maps/geo";
 import { isIndicativeEstimate } from "@/lib/ai/analysis-meta";
 import { shouldSuggestMoreDetails, isUrgentIntervention } from "@/lib/ai/urgency";
 import { clientMissionsApi, clientUploadsApi } from "@/services/api/client";
@@ -284,6 +285,13 @@ export default function DemanderPage() {
     }
     setFieldErrors({});
 
+    const resolvedAddress =
+      formData.address.trim() ||
+      (coords ? formatGpsFallbackAddress(coords, cityHint) : "");
+    if (resolvedAddress && resolvedAddress !== formData.address) {
+      setFormData((prev) => ({ ...prev, address: resolvedAddress }));
+    }
+
     setIsSubmitting(true);
     try {
       let publicUrl = uploadedPhotoUrl ?? undefined;
@@ -309,7 +317,7 @@ export default function DemanderPage() {
         customer_name: customerName,
         customer_email: formData.email.trim(),
         customer_phone: formData.phone,
-        location: formData.address,
+        location: resolvedAddress,
         city: cityHint ?? undefined,
         description: buildMissionDescription(
           iaResult.description_probleme,

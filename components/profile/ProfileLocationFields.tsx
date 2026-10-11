@@ -7,6 +7,7 @@ import { AddressAutocomplete } from "@/components/maps/AddressAutocomplete";
 import { useGeocodeAddress } from "@/hooks/useGeocodeAddress";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { requestBrowserPosition } from "@/lib/maps/browser-geolocation";
+import { formatGpsFallbackAddress, isGpsFallbackAddress } from "@/lib/maps/geo";
 import { FormField, inputClassName } from "@/components/forms/FormField";
 import type { LatLng } from "@/lib/maps/config";
 
@@ -48,7 +49,9 @@ function ProfileLocationFieldsInner({
       const result = await reverseGeocode(coords);
       setIsResolvingAddress(false);
       if (result) {
-        onAddressChange(result.formattedAddress);
+        if (!address.trim() || isGpsFallbackAddress(address)) {
+          onAddressChange(result.formattedAddress);
+        }
         if (result.city) onCityChange(result.city);
       }
     },
@@ -71,6 +74,9 @@ function ProfileLocationFieldsInner({
     try {
       const coords = await requestBrowserPosition();
       onCoordsChange(coords);
+      if (!address.trim()) {
+        onAddressChange(formatGpsFallbackAddress(coords));
+      }
       await applyReverse(coords);
     } catch (err) {
       alert(

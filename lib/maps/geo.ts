@@ -14,6 +14,18 @@ export function haversineKm(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(x));
 }
 
+export function formatGpsFallbackAddress(
+  coords: LatLng,
+  city?: string | null,
+): string {
+  const gps = `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+  return city?.trim() ? `${city.trim()} (${gps})` : `Position GPS ${gps}`;
+}
+
+export function isGpsFallbackAddress(address: string): boolean {
+  return address.trim().startsWith("Position GPS ");
+}
+
 export function formatDistanceKm(km: number): string {
   if (km < 1) return `${Math.round(km * 1000)} m`;
   return `${km.toFixed(1)} km`;
