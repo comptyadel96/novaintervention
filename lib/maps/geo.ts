@@ -23,7 +23,11 @@ export function formatGpsFallbackAddress(
 }
 
 export function isGpsFallbackAddress(address: string): boolean {
-  return address.trim().startsWith("Position GPS ");
+  const trimmed = address.trim();
+  return (
+    trimmed.startsWith("Position GPS ") ||
+    /\(\s*-?\d+\.\d+\s*,\s*-?\d+\.\d+\s*\)$/.test(trimmed)
+  );
 }
 
 export function formatDistanceKm(km: number): string {

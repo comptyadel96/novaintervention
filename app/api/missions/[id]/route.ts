@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { mapMissionFromApiSingle } from "@/lib/api/mappers";
+import { apiErrorJson } from "@/lib/api/errors";
 import { apiRequestWithAuth } from "@/lib/auth/refresh";
 
 export async function PATCH(
@@ -16,8 +17,10 @@ export async function PATCH(
     });
     return NextResponse.json(mapMissionFromApiSingle(data));
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Mise à jour impossible.";
-    return NextResponse.json({ message }, { status: 500 });
+    const { message, status, code } = apiErrorJson(
+      error,
+      "Mise à jour impossible.",
+    );
+    return NextResponse.json({ message, code }, { status });
   }
 }

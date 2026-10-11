@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiErrorJson } from "@/lib/api/errors";
 import { apiRequestWithAuth } from "@/lib/auth/refresh";
 
 export async function GET(request: Request) {
@@ -11,8 +12,10 @@ export async function GET(request: Request) {
     );
     return NextResponse.json(data);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Notifications inaccessibles.";
-    return NextResponse.json({ message }, { status: 500 });
+    const { message, status, code } = apiErrorJson(
+      error,
+      "Notifications inaccessibles.",
+    );
+    return NextResponse.json({ message, code }, { status });
   }
 }

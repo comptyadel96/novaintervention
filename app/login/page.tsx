@@ -57,6 +57,7 @@ export default function LoginPage() {
       await authApi.login({ email: email.trim(), password });
       router.push("/dashboard");
       router.refresh();
+      setIsLoading(false);
     } catch (err) {
       if (isBannedError(err)) {
         router.push("/account-suspended");

@@ -17,6 +17,7 @@ import { resolveProfilePhone } from "@/lib/auth/resolve-phone";
 import type { AuthUser, Profile } from "@/types/domain";
 import { validatePhone } from "@/lib/forms/validate";
 import { getErrorMessage } from "@/lib/api/errors";
+import { formatGpsFallbackAddress } from "@/lib/maps/geo";
 
 export function CompleteProfileForm({
   user,
@@ -54,10 +55,6 @@ export function CompleteProfileForm({
     const phoneCheck = validatePhone(phone);
     if (!phoneCheck.valid) errors.phone = phoneCheck.message!;
 
-    if (!address.trim()) {
-      errors.address = "Indiquez votre adresse (suggestion Google ou GPS).";
-    }
-
     if (latitude == null || longitude == null) {
       errors.location =
         "Enregistrez votre position via GPS ou validez l'adresse.";
@@ -73,7 +70,9 @@ export function CompleteProfileForm({
       await clientProfilesApi.updateMe({
         phone: phone.trim(),
         city,
-        address: address.trim(),
+        address:
+          address.trim() ||
+          formatGpsFallbackAddress({ lat: latitude!, lng: longitude! }, city),
         latitude: latitude!,
         longitude: longitude!,
       });

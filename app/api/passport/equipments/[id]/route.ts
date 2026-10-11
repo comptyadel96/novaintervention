@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { mapEquipment } from "@/lib/api/map-passport";
+import { apiErrorJson } from "@/lib/api/errors";
 import { passportJson, passportRequest } from "@/lib/api/passport-route";
 
 export async function PATCH(
@@ -32,8 +33,10 @@ export async function DELETE(
     await passportRequest<void>(`/equipments/${id}`, { method: "DELETE" });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Suppression impossible.";
-    return NextResponse.json({ message }, { status: 500 });
+    const { message, status, code } = apiErrorJson(
+      error,
+      "Suppression impossible.",
+    );
+    return NextResponse.json({ message, code }, { status });
   }
 }

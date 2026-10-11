@@ -19,6 +19,8 @@ import {
   validateName,
   validatePhone,
 } from "@/lib/forms/validate";
+import { formatGpsFallbackAddress } from "@/lib/maps/geo";
+import { compressImageForUpload } from "@/lib/images/compress-for-upload";
 
 interface ProfileFormProps {
   user: AuthUser;
@@ -111,7 +113,8 @@ export default function ProfileForm({
     setAvatarUploading(true);
     setMessage(null);
     try {
-      const updated = await clientProfilesApi.uploadAvatar(file);
+      const compressed = await compressImageForUpload(file);
+      const updated = await clientProfilesApi.uploadAvatar(compressed);
       const nextUrl =
         updated.avatar_url ?? resolveAvatarUrl(user, updated) ?? "";
       const bust = Date.now();
@@ -143,9 +146,8 @@ export default function ProfileForm({
     if (!fn.valid) errors.firstName = fn.message!;
     if (!ln.valid) errors.lastName = ln.message!;
     if (!ph.valid) errors.phone = ph.message!;
-    if (!cityCheck.valid) errors.city = cityCheck.message!;
-    if (!address.trim()) {
-      errors.address = "Indiquez une adresse (suggestion Google ou validation).";
+    if (!cityCheck.valid && (latitude == null || longitude == null)) {
+      errors.city = cityCheck.message!;
     }
     if (latitude == null || longitude == null) {
       errors.gps =
@@ -165,7 +167,9 @@ export default function ProfileForm({
         last_name: lastName,
         phone,
         city,
-        address: address.trim(),
+        address:
+          address.trim() ||
+          formatGpsFallbackAddress({ lat: latitude!, lng: longitude! }, city),
         availability,
         latitude,
         longitude,

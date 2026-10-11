@@ -670,7 +670,7 @@ export default function DemanderPage() {
                 a été transmise aux artisans certifiés près de{" "}
                 {cityHint ?? "chez vous"}.
               </p>
-              {(confirmationEmailSent || verificationEmailSent || accountCreated) && (
+              {confirmationEmailSent && (
                 <p className="text-sm text-text-muted mb-6 max-w-md mx-auto">
                   Un email de confirmation a été envoyé à{" "}
                   <span className="font-semibold text-primary-dk">

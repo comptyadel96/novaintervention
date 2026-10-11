@@ -16,33 +16,25 @@ export function GoogleMapsProvider({
   const apiKey = getGoogleMapsApiKey();
   const [authError, setAuthError] = useState(false);
 
+  const warning =
+    !apiKey ? (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 mb-4 text-sm text-amber-950">
+        <p className="font-bold mb-1">Suggestions d&apos;adresse indisponibles</p>
+        <p>Saisissez l&apos;adresse à la main ou utilisez le GPS.</p>
+      </div>
+    ) : authError ? (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 mb-4 text-sm text-amber-950">
+        <p className="font-bold mb-1">Suggestions Google indisponibles</p>
+        <p>Saisissez l&apos;adresse à la main ou utilisez le GPS.</p>
+      </div>
+    ) : null;
+
   if (!apiKey) {
     return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950">
-        <p className="font-bold mb-1">Google Maps non configuré</p>
-        <p>
-          Ajoutez <code className="text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
-          dans <code className="text-xs">.env.local</code> (Maps JavaScript, Places,
-          Geocoding, Directions activés dans la console Google Cloud).
-        </p>
-      </div>
-    );
-  }
-
-  if (authError) {
-    return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950">
-        <p className="font-bold mb-1">Google refuse la clé Maps</p>
-        <p className="leading-relaxed">
-          La clé est présente, mais Google Cloud la bloque pour ce domaine
-          ({typeof window !== "undefined" ? window.location.origin : ""}).
-          Dans Credentials → restriction HTTP, autorisez{" "}
-          <code className="text-xs">https://novaintervention.com/*</code> et{" "}
-          <code className="text-xs">https://www.novaintervention.com/*</code>.
-          Vérifiez aussi que Maps JavaScript + Places sont activés et que la
-          facturation Google Cloud l’est aussi.
-        </p>
-      </div>
+      <>
+        {warning}
+        {children}
+      </>
     );
   }
 
@@ -52,6 +44,7 @@ export function GoogleMapsProvider({
       libraries={[...GOOGLE_MAP_LIBRARIES]}
       onError={() => setAuthError(true)}
     >
+      {warning}
       {children}
     </APIProvider>
   );

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiErrorJson } from "@/lib/api/errors";
 import { apiRequestWithAuth } from "@/lib/auth/refresh";
 import { mapProfileFromApi } from "@/lib/api/mappers";
 
@@ -10,8 +11,7 @@ export async function GET() {
       list.map((p) => mapProfileFromApi(p as Record<string, unknown>)),
     );
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Liste inaccessible.";
-    return NextResponse.json({ message }, { status: 500 });
+    const { message, status, code } = apiErrorJson(error, "Liste inaccessible.");
+    return NextResponse.json({ message, code }, { status });
   }
 }

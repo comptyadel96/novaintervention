@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiRequest } from "@/lib/api/client";
+import { apiErrorJson } from "@/lib/api/errors";
 
 export async function POST(request: Request) {
   try {
@@ -10,8 +11,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(data);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Envoi impossible.";
-    return NextResponse.json({ message }, { status: 500 });
+    const { message, status, code } = apiErrorJson(error, "Envoi impossible.");
+    return NextResponse.json({ message, code }, { status });
   }
 }

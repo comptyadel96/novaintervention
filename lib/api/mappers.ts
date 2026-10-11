@@ -254,9 +254,7 @@ export function mapGuestMissionCreateResponse(
       Boolean(str(data.accessToken) ?? str(data.access_token)),
     verificationEmailSent:
       data.verificationEmailSent === true ||
-      data.verification_email_sent === true ||
-      data.emailSent === true ||
-      data.email_sent === true,
+      data.verification_email_sent === true,
     confirmationEmailSent:
       data.confirmationEmailSent === true ||
       data.confirmation_email_sent === true,

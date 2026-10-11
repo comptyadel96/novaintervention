@@ -25,6 +25,7 @@ export default function SettingsForm({ user }: SettingsFormProps) {
     initialSettings.availability ?? "Disponible",
   );
   const [message, setMessage] = useState<string | null>(null);
+  const [messageIsError, setMessageIsError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -41,8 +42,10 @@ export default function SettingsForm({ user }: SettingsFormProps) {
         },
       });
       setMessage("Paramètres sauvegardés.");
+      setMessageIsError(false);
     } catch {
       setMessage("Impossible de sauvegarder les paramètres.");
+      setMessageIsError(true);
     }
 
     setLoading(false);
@@ -121,7 +124,15 @@ export default function SettingsForm({ user }: SettingsFormProps) {
       >
         {loading ? "Sauvegarde..." : "Enregistrer"}
       </button>
-      {message && <p className="text-sm text-primary-dk">{message}</p>}
+      {message && (
+        <p
+          className={`text-sm ${
+            messageIsError ? "text-red-600" : "text-primary-dk"
+          }`}
+        >
+          {message}
+        </p>
+      )}
     </form>
   );
 }
