@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { LatLng } from "@/lib/maps/config";
+import { requestBrowserPosition } from "@/lib/maps/browser-geolocation";
 import { clientProfilesApi } from "@/services/api/client";
 
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
@@ -24,29 +25,22 @@ export function useArtisanLocation(syncToProfile = true) {
   }, [syncToProfile]);
 
   const refresh = useCallback(() => {
-    if (!navigator.geolocation) {
-      setError("Géolocalisation non supportée.");
-      setLoading(false);
-      return;
-    }
     setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const next = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
+    void requestBrowserPosition()
+      .then((next) => {
         setPosition(next);
         setError(null);
         setLoading(false);
         void syncProfile(next);
-      },
-      () => {
-        setError("Impossible d'obtenir votre position.");
+      })
+      .catch((err: unknown) => {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Impossible d'obtenir votre position.",
+        );
         setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
-    );
+      });
   }, [syncProfile]);
 
   useEffect(() => {

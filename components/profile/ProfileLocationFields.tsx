@@ -6,6 +6,7 @@ import { GoogleMapsProvider } from "@/components/maps/GoogleMapsProvider";
 import { AddressAutocomplete } from "@/components/maps/AddressAutocomplete";
 import { useGeocodeAddress } from "@/hooks/useGeocodeAddress";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
+import { requestBrowserPosition } from "@/lib/maps/browser-geolocation";
 import { FormField, inputClassName } from "@/components/forms/FormField";
 import type { LatLng } from "@/lib/maps/config";
 
@@ -65,28 +66,21 @@ function ProfileLocationFieldsInner({
     }
   }, [latitude, longitude, address, reverseReady, applyReverse]);
 
-  const captureGps = () => {
-    if (!navigator.geolocation) {
-      alert("Géolocalisation non supportée.");
-      return;
-    }
+  const captureGps = async () => {
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const coords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        onCoordsChange(coords);
-        await applyReverse(coords);
-        setIsLocating(false);
-      },
-      () => {
-        alert("Impossible d'obtenir votre position.");
-        setIsLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000 },
-    );
+    try {
+      const coords = await requestBrowserPosition();
+      onCoordsChange(coords);
+      await applyReverse(coords);
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Impossible d'obtenir votre position.",
+      );
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   const geocodeManualAddress = async () => {

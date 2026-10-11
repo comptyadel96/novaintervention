@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
 import { FormField, inputClassName } from "@/components/forms/FormField";
 import { AddressAutocomplete } from "@/components/maps/AddressAutocomplete";
 import { GoogleMapsProvider } from "@/components/maps/GoogleMapsProvider";
 import { useGeocodeAddress } from "@/hooks/useGeocodeAddress";
+import { useReverseGeocode } from "@/hooks/useReverseGeocode";
+import { requestBrowserPosition } from "@/lib/maps/browser-geolocation";
 import type { LatLng } from "@/lib/maps/config";
 import {
   validateAddress,
@@ -52,29 +54,65 @@ function DemanderCoordinatesForm({
   onSubmit,
 }: Props) {
   const { geocode, ready } = useGeocodeAddress();
+  const { reverseGeocode, ready: reverseReady } = useReverseGeocode();
   const [isLocating, setIsLocating] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isResolvingAddress, setIsResolvingAddress] = useState(false);
+  const autoLocateTried = useRef(false);
 
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      alert("La géolocalisation n'est pas supportée.");
-      return;
-    }
+  const applyReverse = useCallback(
+    async (nextCoords: LatLng) => {
+      if (!reverseReady) return;
+      setIsResolvingAddress(true);
+      const result = await reverseGeocode(nextCoords);
+      setIsResolvingAddress(false);
+      if (result) {
+        setFormData((prev) =>
+          prev.address.trim()
+            ? prev
+            : { ...prev, address: result.formattedAddress },
+        );
+        if (result.city) setCityHint(result.city);
+      }
+    },
+    [reverseGeocode, reverseReady, setFormData, setCityHint],
+  );
+
+  const locate = useCallback(async () => {
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-        setIsLocating(false);
-      },
-      () => {
-        alert("Impossible de récupérer votre position.");
-        setIsLocating(false);
-      },
-    );
-  };
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.location;
+      return next;
+    });
+    try {
+      const nextCoords = await requestBrowserPosition();
+      setCoords(nextCoords);
+      await applyReverse(nextCoords);
+    } catch (err) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        location:
+          err instanceof Error
+            ? err.message
+            : "Impossible d'obtenir votre position.",
+      }));
+    } finally {
+      setIsLocating(false);
+    }
+  }, [applyReverse, setCoords, setFieldErrors]);
+
+  useEffect(() => {
+    if (autoLocateTried.current || coords) return;
+    autoLocateTried.current = true;
+    void locate();
+  }, [coords, locate]);
+
+  useEffect(() => {
+    if (coords && !formData.address.trim() && reverseReady) {
+      void applyReverse(coords);
+    }
+  }, [coords, formData.address, reverseReady, applyReverse]);
 
   const handleGeocodeAddress = async () => {
     if (!formData.address.trim()) return;
@@ -194,11 +232,17 @@ function DemanderCoordinatesForm({
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={handleGetLocation}
-              className="text-xs font-bold text-primary hover:underline"
-              disabled={isLocating}
+              onClick={() => void locate()}
+              className="btn btn-outline btn-sm"
+              disabled={isLocating || isResolvingAddress}
             >
-              {isLocating ? "Localisation…" : "Ma position GPS"}
+              {isLocating
+                ? "GPS…"
+                : isResolvingAddress
+                  ? "Adresse…"
+                  : coords
+                    ? "Actualiser GPS"
+                    : "Ma position GPS"}
             </button>
             {ready && (
               <button
