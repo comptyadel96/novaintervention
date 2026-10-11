@@ -42,6 +42,7 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RegisterErrors>({});
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadGoogleIdentityScript().catch(() => {});
@@ -77,7 +78,7 @@ export default function RegisterPage() {
     setFieldErrors({});
 
     try {
-      await authApi.register({
+      const result = await authApi.register({
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
@@ -86,6 +87,10 @@ export default function RegisterPage() {
         role: "client",
       });
 
+      setSuccessMessage(
+        result.message ??
+          "Compte créé. Vérifiez vos emails (et les spams) pour confirmer votre inscription.",
+      );
       setSuccess(true);
       setIsLoading(false);
     } catch (err) {
@@ -155,8 +160,8 @@ export default function RegisterPage() {
                   Compte créé !
                 </h2>
                 <p className="text-text-muted mb-6">
-                  Vérifiez vos emails pour confirmer votre inscription avant de
-                  créer une demande d&apos;intervention.
+                  {successMessage ??
+                    "Vérifiez vos emails (et les spams) pour confirmer votre inscription avant de créer une demande d'intervention."}
                 </p>
                 <div className="flex flex-col gap-3">
                   <Link href="/login" className="btn btn-primary w-full justify-center">

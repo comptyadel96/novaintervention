@@ -22,10 +22,13 @@ export const authApi = {
   },
 
   register(input: RegisterInput) {
-    return bffFetch<{ message: string }>("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(input),
-    });
+    return bffFetch<{ message: string; emailSent?: boolean }>(
+      "/api/auth/register",
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    );
   },
 
   logout() {

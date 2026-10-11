@@ -113,6 +113,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Aucun compte Nova ne correspond à cet email. Le nouveau propriétaire doit créer son compte avant le transfert.",
   TRANSFER_TARGET_INVALID:
     "Vous ne pouvez pas transférer ce passeport à vous-même.",
+  PHONE_TAKEN:
+    "Ce numéro de téléphone est déjà utilisé.",
 
 };
 

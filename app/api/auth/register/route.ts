@@ -11,6 +11,7 @@ type RegisterResponse = {
   user: unknown;
   profile?: unknown;
   message?: string;
+  emailSent?: boolean;
 };
 
 export async function POST(request: Request) {
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: data.message ?? "Compte créé avec succès.",
+      emailSent: data.emailSent === true,
       user: session.user,
       profile: session.profile,
     });

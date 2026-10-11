@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { mapProfileFromApi, mapProfileToPatch } from "@/lib/api/mappers";
+import { apiErrorJson } from "@/lib/api/errors";
 import { apiRequestWithAuth } from "@/lib/auth/refresh";
 
 export async function GET() {
@@ -9,9 +10,11 @@ export async function GET() {
     );
     return NextResponse.json(mapProfileFromApi(data));
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Profil inaccessible.";
-    return NextResponse.json({ message }, { status: 500 });
+    const { message, status, code } = apiErrorJson(
+      error,
+      "Profil inaccessible.",
+    );
+    return NextResponse.json({ message, code }, { status });
   }
 }
 
@@ -27,8 +30,10 @@ export async function PATCH(request: Request) {
     );
     return NextResponse.json(mapProfileFromApi(data));
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Mise à jour impossible.";
-    return NextResponse.json({ message }, { status: 500 });
+    const { message, status, code } = apiErrorJson(
+      error,
+      "Mise à jour impossible.",
+    );
+    return NextResponse.json({ message, code }, { status });
   }
 }
