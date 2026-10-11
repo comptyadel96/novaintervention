@@ -5,6 +5,8 @@ import { mapAnalyzePhotoResult } from "@/lib/ai/map-analysis";
 import { parseAnalyzePhotoMeta } from "@/lib/ai/analysis-meta";
 import { getMockAnalyzePhotoResult } from "@/lib/ai/mock-analysis";
 
+export const maxDuration = 60;
+
 function allowLocalMockFallback(): boolean {
   return process.env.AI_ANALYZE_ALLOW_MOCK === "true";
 }
@@ -45,6 +47,30 @@ export async function POST(req: Request) {
 
       return NextResponse.json({ analysis, meta });
     } catch (error) {
+      if (backendBody.context && backendBody.context.length >= 10) {
+        try {
+          const data = await apiRequestPublicFirst<Record<string, unknown>>(
+            "/ai/analyze-text",
+            {
+              method: "POST",
+              body: {
+                description: backendBody.context,
+                category: "plomberie",
+              },
+            },
+          );
+          return NextResponse.json({
+            analysis: mapAnalyzePhotoResult(data),
+            meta: {
+              ...parseAnalyzePhotoMeta(data),
+              source: "manual",
+              fallbackReason: "photo_failed",
+            },
+          });
+        } catch {
+          // on renvoie l'erreur photo ci-dessous
+        }
+      }
       if (error instanceof ApiError) {
         if (allowLocalMockFallback() && error.status >= 500) {
           const analysis = getMockAnalyzePhotoResult();

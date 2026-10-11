@@ -4,6 +4,10 @@ import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { analyzePhoto, analyzeText } from "@/services/api/vision";
+import {
+  compressImageForUpload,
+  fileToDataUrl,
+} from "@/lib/images/compress-for-upload";
 import { fetchAiPhotoStatus } from "@/services/api/ai-photo";
 import type { AnalyzePhotoMeta, AnalyzePhotoResult } from "@/types";
 import { formatAiInterventionType } from "@/lib/ai/intervention-labels";
@@ -164,21 +168,32 @@ export default function DemanderPage() {
     setAnalysisError(null);
 
     try {
+      const compressed = await compressImageForUpload(file);
+      if (compressed !== file) {
+        setFile(compressed);
+        const compactPreview = await fileToDataUrl(compressed);
+        setPreview(compactPreview);
+      }
+
       let imageUrl = uploadedPhotoUrl ?? undefined;
 
       if (!imageUrl) {
         try {
-          const { url } = await clientUploadsApi.uploadInterventionPhoto(file);
+          const { url } =
+            await clientUploadsApi.uploadInterventionPhoto(compressed);
           imageUrl = url;
           setUploadedPhotoUrl(url);
         } catch {
-          // analyse via base64 si upload indisponible
+          // analyse via base64 compressé si upload indisponible
         }
       }
 
+      const image =
+        imageUrl ? undefined : await fileToDataUrl(compressed);
+
       const { analysis, meta } = await analyzePhoto({
         imageUrl,
-        image: imageUrl ? undefined : preview,
+        image,
         context: photoContext.trim() || undefined,
       });
 
@@ -188,10 +203,28 @@ export default function DemanderPage() {
       setStep(1);
     } catch (err) {
       console.error(err);
+      if (photoContext.trim().length >= 10) {
+        try {
+          const { analysis, meta } = await analyzeText({
+            description: photoContext.trim(),
+            category: "plomberie",
+          });
+          setIaResult(analysis);
+          setAnalysisMeta({
+            ...meta,
+            fallbackReason: meta.fallbackReason ?? "photo_failed",
+          });
+          setCreationMode("mixed");
+          setStep(1);
+          return;
+        } catch {
+          // message ci-dessous
+        }
+      }
       setAnalysisError(
         getErrorMessage(
           err,
-          "Impossible d'analyser la photo pour le moment.",
+          "Impossible d'analyser la photo pour le moment. Réessayez, ou continuez sans photo.",
         ),
       );
     } finally {

@@ -71,11 +71,17 @@ export async function bffFetch<T>(
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
+    const payloadRecord = payload as { message?: string; error?: string; code?: string };
+    const fallback =
+      response.status === 413
+        ? "Photo trop lourde. Réessayez : elle sera compressée automatiquement."
+        : response.status === 504 || response.status === 408
+          ? "L'analyse a pris trop de temps. Réessayez ou continuez sans photo."
+          : "Une erreur est survenue.";
     throw new ApiError(
-      (payload as { message?: string }).message ??
-        "Une erreur est survenue.",
+      payloadRecord.message ?? payloadRecord.error ?? fallback,
       response.status,
-      (payload as { code?: string }).code,
+      payloadRecord.code,
     );
   }
 

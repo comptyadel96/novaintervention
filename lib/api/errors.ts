@@ -86,6 +86,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   AI_INVALID_SHAPE:
 
     "Réponse IA inattendue. Réessayez ou contactez le support.",
+  PAYLOAD_TOO_LARGE:
+    "Photo trop lourde. Réessayez : elle sera compressée automatiquement.",
+  RATE_LIMITED:
+    "Trop de tentatives. Attendez une minute puis réessayez.",
 
   MISSION_INVALID_STATE:
 
