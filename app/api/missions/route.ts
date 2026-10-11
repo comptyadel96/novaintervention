@@ -95,6 +95,7 @@ export async function POST(request: Request) {
         accountCreated: guest.accountCreated,
         autoLogin: Boolean(!token && guest.accessToken),
         verificationEmailSent: guest.verificationEmailSent,
+        confirmationEmailSent: guest.confirmationEmailSent,
       },
       { status: 201 },
     );

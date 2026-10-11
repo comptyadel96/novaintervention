@@ -263,6 +263,7 @@ export type GuestMissionCreateResponse = {
   accountCreated?: boolean;
   autoLogin?: boolean;
   verificationEmailSent?: boolean;
+  confirmationEmailSent?: boolean;
 };
 
 export type EnRouteMissionResponse = {

@@ -237,6 +237,7 @@ export type GuestMissionCreateResult = {
   refreshToken?: string;
   accountCreated?: boolean;
   verificationEmailSent?: boolean;
+  confirmationEmailSent?: boolean;
 };
 
 export function mapGuestMissionCreateResponse(
@@ -256,6 +257,9 @@ export function mapGuestMissionCreateResponse(
       data.verification_email_sent === true ||
       data.emailSent === true ||
       data.email_sent === true,
+    confirmationEmailSent:
+      data.confirmationEmailSent === true ||
+      data.confirmation_email_sent === true,
   };
 }
 
