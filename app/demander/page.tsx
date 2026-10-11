@@ -146,19 +146,25 @@ export default function DemanderPage() {
     }
   }, [router]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) {
-      setFile(f);
-      setUploadedPhotoUrl(null);
-      setIaResult(null);
-      setAnalysisMeta(null);
-      setAnalysisError(null);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(f);
+    if (!f) return;
+
+    setUploadedPhotoUrl(null);
+    setIaResult(null);
+    setAnalysisMeta(null);
+    setAnalysisError(null);
+
+    try {
+      const compressed = await compressImageForUpload(f);
+      setFile(compressed);
+      setPreview(await fileToDataUrl(compressed));
+    } catch {
+      setFile(null);
+      setPreview(null);
+      setAnalysisError(
+        "Photo illisible. Réessayez avec une autre image (JPEG ou PNG).",
+      );
     }
   };
 
@@ -168,32 +174,22 @@ export default function DemanderPage() {
     setAnalysisError(null);
 
     try {
-      const compressed = await compressImageForUpload(file);
-      if (compressed !== file) {
-        setFile(compressed);
-        const compactPreview = await fileToDataUrl(compressed);
-        setPreview(compactPreview);
+      const prepared = await compressImageForUpload(file);
+      if (prepared !== file) {
+        setFile(prepared);
+        setPreview(await fileToDataUrl(prepared));
       }
 
       let imageUrl = uploadedPhotoUrl ?? undefined;
-
       if (!imageUrl) {
-        try {
-          const { url } =
-            await clientUploadsApi.uploadInterventionPhoto(compressed);
-          imageUrl = url;
-          setUploadedPhotoUrl(url);
-        } catch {
-          // analyse via base64 compressé si upload indisponible
-        }
+        const uploaded =
+          await clientUploadsApi.uploadInterventionPhoto(prepared);
+        imageUrl = uploaded.url;
+        setUploadedPhotoUrl(uploaded.url);
       }
-
-      const image =
-        imageUrl ? undefined : await fileToDataUrl(compressed);
 
       const { analysis, meta } = await analyzePhoto({
         imageUrl,
-        image,
         context: photoContext.trim() || undefined,
       });
 

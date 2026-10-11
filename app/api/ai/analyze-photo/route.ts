@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const backendBody: Record<string, string> = {};
     if (body.imageUrl) {
       backendBody.imageUrl = body.imageUrl;
-    } else if (body.image) {
+    } else if (body.image && body.image.length < 350_000) {
       backendBody.image = body.image;
     }
     if (body.context?.trim()) {

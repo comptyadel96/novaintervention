@@ -15,6 +15,7 @@ import type {
   PartnerApplicationStatus,
 } from "@/types/domain";
 import { bffFetch } from "@/lib/api/bff-client";
+import { uploadInterventionFile } from "@/lib/images/upload-intervention";
 
 export const clientProfilesApi = {
   list() {
@@ -160,15 +161,7 @@ export const clientMissionsApi = {
 
 export const clientUploadsApi = {
   uploadInterventionPhoto(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    return bffFetch<{ url: string; publicId?: string }>(
-      "/api/uploads/interventions",
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
+    return uploadInterventionFile(file);
   },
 };
 

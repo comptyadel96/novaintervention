@@ -22,7 +22,30 @@ function canvasToFile(canvas: HTMLCanvasElement, name: string): Promise<File> {
   });
 }
 
-/** Réduit une photo téléphone pour passer les limites Vercel / API (~4,5 Mo). */
+function loadHtmlImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Image illisible."));
+    image.src = src;
+  });
+}
+
+async function fileToBitmap(file: File): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(file);
+  } catch {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await loadHtmlImage(objectUrl);
+      return await createImageBitmap(image);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+}
+
+/** Réduit une photo téléphone (HEIC/JPEG 8–12 Mo → ~200–400 Ko). */
 export async function compressImageForUpload(file: File): Promise<File> {
   if (!file.type.startsWith("image/") || file.type === "image/gif") {
     return file;
@@ -31,23 +54,23 @@ export async function compressImageForUpload(file: File): Promise<File> {
     return file;
   }
 
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    bitmap.close();
-    return file;
-  }
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-
   try {
+    const bitmap = await fileToBitmap(file);
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
     const compressed = await canvasToFile(canvas, file.name);
     return compressed.size > 0 && compressed.size < file.size
       ? compressed

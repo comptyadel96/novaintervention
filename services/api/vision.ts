@@ -31,13 +31,18 @@ export async function analyzePhoto(
     throw new Error("Aucune image ou description à analyser.");
   }
 
+  const image =
+    !input.imageUrl && input.image && input.image.length < 350_000
+      ? input.image
+      : undefined;
+
   const payload = await bffFetch<Record<string, unknown>>(
     "/api/ai/analyze-photo",
     {
       method: "POST",
       body: JSON.stringify({
-        image: input.image,
         imageUrl: input.imageUrl,
+        image,
         context: input.context,
       }),
     },
