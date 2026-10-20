@@ -4,9 +4,17 @@ import {
   REFRESH_TOKEN_COOKIE,
 } from "@/lib/auth/cookies";
 
+/** Remettre à false pour rouvrir le site. */
+const MAINTENANCE_MODE = true;
+
 export function middleware(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get("token");
   const path = request.nextUrl.pathname;
+
+  if (MAINTENANCE_MODE && path !== "/maintenance") {
+    return NextResponse.rewrite(new URL("/maintenance", request.url));
+  }
+
+  const token = request.nextUrl.searchParams.get("token");
 
   if (
     token &&
