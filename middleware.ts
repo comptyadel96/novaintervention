@@ -4,8 +4,8 @@ import {
   REFRESH_TOKEN_COOKIE,
 } from "@/lib/auth/cookies";
 
-/** Remettre à false pour rouvrir le site. */
-const MAINTENANCE_MODE = true;
+/** Remettre à true pour afficher la page de maintenance. */
+const MAINTENANCE_MODE = false;
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
